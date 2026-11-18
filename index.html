@@ -35,7 +35,7 @@ p{font-size:17px;line-height:1.55;color:var(--muted)}
 .card{position:absolute;left:6vw;top:50%;transform:translateY(-50%);width:min(380px,30vw);opacity:0;pointer-events:none;will-change:opacity,transform}
 .card .kicker{margin-bottom:14px}
 .card h2{margin-bottom:16px}
-.layers{position:absolute;right:4vw;top:64px;list-style:none;font-family:var(--label);font-size:calc(14px*var(--label-size));opacity:0;transition:opacity .4s}
+.layers{position:absolute;right:6vw;top:50%;list-style:none;font-family:var(--label);font-size:calc(14px*var(--label-size));opacity:0;transition:opacity .4s}
 .layers li{display:flex;align-items:center;gap:10px;padding:6px 0;color:var(--muted);opacity:.45;transition:opacity .25s,color .25s}
 .layers li.on{opacity:1;color:var(--fg)}
 #ym{position:absolute;left:0;top:0;pointer-events:none;opacity:0;transition:opacity .3s}
@@ -206,7 +206,7 @@ html.m #tw{left:12px;right:12px;width:auto;bottom:60px}
   <div class="xhead">
     <div class="kicker" data-t="xray.k">X-RAY</div>
     <h2 style="margin-top:14px" data-t="xray.h">hidden in the depths</h2>
-    <p data-t="xray.p">Hover over a group to highlight it. Click a filter to jump to where it is densest.</p>
+    <p data-t="xray.p">Select a group to highlight it. Click a filter to jump to where it is densest.</p>
   </div>
   <div class="xgrid">
     <aside class="panel" id="infoPanel">
@@ -278,8 +278,8 @@ html.m #tw{left:12px;right:12px;width:auto;bottom:60px}
 <script src="ymeter.js"></script>
 <script>
 /* ================= Tweaks ================= */
-const DEF={theme:'light',labelFont:'Monocraft',labelSize:0.8,swR:0,swO:0,build:100,intro:80,trans:80,stop:80,outro:30,gap:0,fadeLen:10,fit:'flush',scale:100,fade:10,s2:70,s2gap:80,xbg:'full',xbgOp:40,rest:35,xdur:400,layout:'auto',imgset:'auto'};
-const VER='v6'; // neue Standardwerte → alte gespeicherte Tweaks verwerfen
+const DEF={theme:'light',labelFont:'Monocraft',labelSize:0.8,swR:0,swO:0,build:200,intro:80,trans:80,stop:80,outro:30,gap:0,fadeLen:10,fit:'flush',scale:100,fade:10,s2:70,s2gap:80,xbg:'full',xbgOp:40,rest:35,xdur:400,layout:'auto',imgset:'auto'};
+const VER='v7'; // neue Standardwerte → alte gespeicherte Tweaks verwerfen
 let S={...DEF}; try{const o=JSON.parse(localStorage.getItem('chunkTweaks')||'{}');if(o._v===VER)Object.assign(S,o)}catch(e){}
 const tw=document.getElementById('tw');
 document.getElementById('twBtn').onclick=()=>tw.classList.toggle('open');
@@ -420,6 +420,8 @@ function draw(){
 function placeCards(){
   const m=isM(), r2=m?rectM2(SW,SH):null, bt=m?Math.round(SH-(r2.y+.04*r2.h)+12)+'px':'';
   for(const c in cards){cards[c].style.top=m?'auto':'';cards[c].style.bottom=bt;}
+  // Schichtliste am Desktop vertikal zentriert (wie der Text links), auf ganze Pixel gerundet
+  layersEl.style.transform=m?'':`translateY(${-Math.round(layersEl.offsetHeight/2)}px)`;
 }
 // Tiefenmeter: fester Platz an der linken Chunk-Ecke, Wert = oberster Block der Ecksäule
 function placeMeter(){
@@ -544,7 +546,7 @@ function spark(g){
 }
 function info(id){
   if(!id){const sel=filter==='all'?Object.keys(G):idsFor(filter);
-    infoEl.innerHTML=`<div style="grid-column:1/-1"><div class="kicker">${filter==='all'?'Overview':filter==='ore'?'Ores':'Rocks'}</div><h3>${sel.length} groups</h3><p class="desc" style="font-size:14px">Hover over the column or pick a filter to see where each block generates in the world, not just in this chunk.</p></div>`;return;}
+    infoEl.innerHTML=`<div style="grid-column:1/-1"><div class="kicker">${filter==='all'?'Overview':filter==='ore'?'Ores':'Rocks'}</div><h3>${sel.length} groups</h3><p class="desc" style="font-size:14px">Select a column or pick a filter to see where each block generates in the world, not just in this chunk.</p></div>`;return;}
   const g=G[id];
   infoEl.innerHTML=`<div><div class="kicker">${g.k==='ore'?'Ore':g.k==='rock'?'Rock':'Floor'}</div><h3>${g.n}</h3><dl><dt>Generates</dt><dd>Y ${g.range}</dd><dt>Most common</dt><dd>${g.peak}</dd></dl></div>${spark(g)}<div class="desc">${g.d}</div><div class="src">Distribution across the whole world height · vanilla world generation, Java Edition. Shaded: range shown in the column.</div>`;
 }
