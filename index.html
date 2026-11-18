@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Ein Chunk – Prototyp</title>
+<title>Minecraft Chunk Analysis</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Pixelify+Sans:wght@400;500&family=Silkscreen&family=VT323&family=Press+Start+2P&display=swap" rel="stylesheet">
 <style>
@@ -17,7 +17,7 @@
 html[data-theme=dark]{--bg:#0c0d0f;--fg:#f2f2ef;--muted:#9a9c9f;--line:#2a2c30;--panel:#111215;--chip:#16171a;--outline:#ffffff;--tip-bg:#f2f2ef;--tip-fg:#111}
 *{box-sizing:border-box;margin:0;padding:0}
 html{background:var(--bg);color:var(--fg);font-family:var(--sans);-webkit-font-smoothing:antialiased;transition:background .3s,color .3s}
-body{overflow-x:hidden}
+html,body{overflow-x:clip} /* clip statt hidden: sonst funktioniert position:sticky nicht */
 .lbl,.kicker{font-family:var(--label)}
 .kicker{font-size:calc(13px*var(--label-size));letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
 h1{font-size:clamp(44px,7vw,104px);font-weight:700;letter-spacing:-.035em;line-height:.95}
@@ -114,7 +114,42 @@ html.editing .kicker:empty{display:block;min-height:1em;min-width:4em}
 #tw button{flex:1;padding:7px;border:1px solid var(--line);background:var(--bg);color:var(--fg);cursor:pointer;font:600 12px var(--sans);border-radius:6px}
 #tw textarea{width:100%;height:110px;margin-top:8px;font:11px monospace;display:none}
 
-@media (max-width:900px){.card{left:5vw;right:5vw;width:auto;top:auto;bottom:8vh;transform:none}.layers{display:none}.xgrid{grid-template-columns:1fr}.panel{position:relative}.col{width:70vw}}
+/* ---------- Mobil (html.m wird per JS gesetzt: schmal oder Hochformat) ---------- */
+html.m h1{font-size:44px}
+html.m h2{font-size:28px}
+html.m p{font-size:15px}
+html.m .hero{top:auto;bottom:16vh}
+html.m .hint{bottom:4vh}
+html.m .card{left:20px;right:20px;width:auto}
+html.m .card .kicker{margin-bottom:8px}
+html.m .card h2{margin-bottom:10px}
+html.m .layers{left:20px;right:20px;top:16px;display:flex;flex-wrap:wrap;gap:2px 14px}
+html.m .layers li{padding:2px 0;gap:6px}
+html.m .layers .sw{width:8px;height:8px}
+html.m #ym .val{right:auto;left:calc(var(--mc-px,4px)*-4);bottom:calc(var(--mc-px,4px)*2)}
+html.m .pause{padding:10vh 20px}
+html.m .pause p{font-size:16px}
+html.m .xhead{padding:0 20px 5vh}
+html.m .xgrid{display:flex;flex-direction:column;padding:0 12px}
+html.m #chipPanel{order:-1}
+html.m #chipPanel{position:sticky;top:0;z-index:30;background:var(--bg);margin:0 -12px 12px;padding:10px 12px}
+html.m .chips{flex-wrap:nowrap;overflow-x:auto;max-width:none;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+html.m .chips::-webkit-scrollbar{display:none}
+html.m .chip{flex:none;white-space:nowrap}
+html.m .chipsep{display:none}
+html.m .col{width:calc(100vw - 24px - 60px);margin-left:60px}
+html.m .axis{left:-58px;width:54px}
+html.m .axis .t{right:6px}
+html.m .band{left:0;width:6px}
+html.m .band span{display:none}
+html.m .tip{display:none}
+html.m #infoPanel{position:fixed;left:0;right:0;bottom:0;top:auto;z-index:40;transform:translateY(105%);transition:transform .35s ease}
+html.m #infoPanel.show{transform:none}
+html.m .info{min-height:0;max-height:46vh;overflow:auto;padding:16px 20px 20px;box-shadow:0 -10px 30px rgba(0,0,0,.12);grid-template-columns:1fr 70px}
+html.m .info h3{font-size:22px;margin:4px 0 8px}
+html.m .spark{width:70px;height:150px}
+html.m .placeholder{margin:0 20px 12vh;min-height:40vh}
+html.m #tw{left:12px;right:12px;width:auto;bottom:60px}
 </style>
 </head>
 <body>
@@ -175,16 +210,16 @@ html.editing .kicker:empty{display:block;min-height:1em;min-width:4em}
     <p data-t="xray.p">Hover over a group to highlight it. Click a filter to jump to where it is densest.</p>
   </div>
   <div class="xgrid">
-    <aside class="panel">
+    <aside class="panel" id="infoPanel">
       <div class="info" id="info"></div>
     </aside>
     <div class="col" id="col">
-      <img class="bg" data-bg="surface" src="xray/surface.webp" alt="">
-      <img class="bg" data-bg="full" src="xray/chunk_full.webp" alt="">
-      <img class="main" src="xray/main.webp" alt="X-ray view of the chunk">
+      <img class="bg" data-bg="surface" data-f="surface.webp" alt="">
+      <img class="bg" data-bg="full" data-f="chunk_full.webp" alt="">
+      <img class="main" data-f="main.webp" width="1532" height="7541" alt="X-ray view of the chunk">
       <div class="axis" id="axis"></div>
     </div>
-    <aside class="panel">
+    <aside class="panel" id="chipPanel">
       <div class="chips" id="chips"></div>
     </aside>
   </div>
@@ -221,6 +256,8 @@ html.editing .kicker:empty{display:block;min-height:1em;min-width:4em}
   <label>Text fade<input type="range" data-k="fadeLen" min="5" max="25" step="1"><output></output></label>
   <label>Gap to X-ray<input type="range" data-k="gap" min="0" max="40" step="1"><output></output></label>
   <h4>Sequence frame</h4>
+  <label class="sel">Layout<select data-k="layout"><option value="auto">Auto</option><option value="desktop">Desktop</option><option value="mobile">Mobile</option></select></label>
+  <label class="sel">Image size<select data-k="imgset"><option value="auto">Auto</option><option value="full">Full</option><option value="small">Small (mobile)</option></select></label>
   <label class="sel">Part 1 fit<select data-k="fit"><option value="flush">Full height (flush)</option><option value="fade">Fit + fade edges</option><option value="contain">Fit (hard edges)</option></select></label>
   <label>Part 1 size %<input type="range" data-k="scale" min="60" max="130" step="5"><output></output></label>
   <label>Fade %<input type="range" data-k="fade" min="0" max="30" step="1"><output></output></label>
@@ -242,7 +279,7 @@ html.editing .kicker:empty{display:block;min-height:1em;min-width:4em}
 <script src="ymeter.js"></script>
 <script>
 /* ================= Tweaks ================= */
-const DEF={theme:'light',labelFont:'Monocraft',labelSize:0.8,swR:0,swO:0,build:100,intro:80,trans:80,stop:80,outro:30,gap:0,fadeLen:10,fit:'flush',scale:100,fade:10,s2:70,s2gap:80,xbg:'full',xbgOp:40,rest:35,xdur:400};
+const DEF={theme:'light',labelFont:'Monocraft',labelSize:0.8,swR:0,swO:0,build:100,intro:80,trans:80,stop:80,outro:30,gap:0,fadeLen:10,fit:'flush',scale:100,fade:10,s2:70,s2gap:80,xbg:'full',xbgOp:40,rest:35,xdur:400,layout:'auto',imgset:'auto'};
 const VER='v6'; // neue Standardwerte → alte gespeicherte Tweaks verwerfen
 let S={...DEF}; try{const o=JSON.parse(localStorage.getItem('chunkTweaks')||'{}');if(o._v===VER)Object.assign(S,o)}catch(e){}
 const tw=document.getElementById('tw');
@@ -251,7 +288,8 @@ addEventListener('keydown',e=>{if(e.key==='t'&&!/INPUT|SELECT|TEXTAREA/.test(e.t
 tw.querySelectorAll('[data-k]').forEach(el=>{
   const k=el.dataset.k, out=el.parentElement.querySelector('output');
   el.value=S[k]; if(out)out.textContent=S[k];
-  el.addEventListener('input',()=>{S[k]=el.type==='range'?+el.value:el.value;if(out)out.textContent=S[k];applyTweaks();});
+  el.addEventListener('input',()=>{S[k]=el.type==='range'?+el.value:el.value;if(out)out.textContent=S[k];applyTweaks();
+    if(k==='imgset')location.reload(); /* Bildsatz wird beim Laden gewählt */});
 });
 document.getElementById('twReset').onclick=()=>{S={...DEF};tw.querySelectorAll('[data-k]').forEach(el=>{el.value=S[el.dataset.k];const o=el.parentElement.querySelector('output');if(o)o.textContent=S[el.dataset.k]});applyTweaks();};
 document.getElementById('twCopy').onclick=async()=>{const t=JSON.stringify(S);const ta=document.getElementById('twOut');ta.value=t;try{await navigator.clipboard.writeText(t);document.getElementById('twCopy').textContent='Copied ✓';setTimeout(()=>document.getElementById('twCopy').textContent='Copy settings',1500)}catch(e){ta.style.display='block';ta.select();}};
@@ -270,9 +308,12 @@ document.getElementById('txReset').onclick=()=>{T={};try{localStorage.removeItem
 const darkMQ=matchMedia('(prefers-color-scheme: dark)');
 darkMQ.addEventListener('change',()=>{if(S.theme==='auto')applyTweaks();});
 // Pixel-Font: Schriftgröße auf ganze Gerätepixel pro Font-Pixel runden
+// Mobil-Layout: schmaler Bildschirm oder Hochformat (Tweak „Layout“ kann es erzwingen)
+// screen.width mit einbeziehen: Mobil-Browser vergrößern innerWidth, solange das Desktop-Layout überläuft
+const isM=()=>{if(S.layout==='mobile')return true;if(S.layout==='desktop')return false;const w=Math.min(innerWidth,screen.width),h=Math.min(innerHeight,screen.height);return w<760||(h>w*1.15&&w<1000);};
 function mcSizes(){
   // Monocraft: 9 Font-Pixel pro em → scharf bei 9·k Gerätepixeln. Klein: 2 Gerätepx/Font-Pixel (18 px), groß: 4 (36 px) bei 100 %
-  const d=devicePixelRatio||1, ks=Math.max(1,Math.round(2*d-.01)), kl=Math.max(2,Math.round(4*d-.01)), r=document.documentElement; // bei Gleichstand kleiner
+  const m=isM(), d=devicePixelRatio||1, ks=Math.max(1,Math.round((m?1.5:2)*d-.01)), kl=Math.max(2,Math.round((m?3:4)*d-.01)), r=document.documentElement; // bei Gleichstand kleiner; mobil kleinere Labels
   r.style.setProperty('--mc-s',(9*ks/d)+'px');
   r.style.setProperty('--mc-l',(9*kl/d)+'px');
   r.style.setProperty('--mc-px',(kl/d)+'px'); // 1 Font-Pixel der großen Zahl
@@ -282,6 +323,7 @@ addEventListener('resize',mcSizes);
 
 function applyTweaks(){
   const r=document.documentElement;
+  r.classList.toggle('m',isM());
   r.dataset.theme=S.theme==='auto'?(darkMQ.matches?'dark':'light'):S.theme; r.classList.toggle('mcfont',S.labelFont==='Monocraft');
   mcSizes();
   r.style.setProperty('--xdur',S.xdur+'ms');
@@ -295,9 +337,13 @@ function applyTweaks(){
 
 /* ================= Sequence ================= */
 // 240 Frames in 24 Sprite-Sheets à 10 Frames, 20 px Abstand (verhindert Farbstreifen am Rand)
-const N=240, PER=10, STRIDE=560, sheets=[]; let loaded=0;
+// Bildsatz: auf Handys (oder bei „Datensparen“) halbe Auflösung – ca. 8,5 statt 16 MB
+const SMALL=S.imgset==='small'||(S.imgset==='auto'&&(Math.min(screen.width,screen.height)<600||(navigator.connection&&navigator.connection.saveData)));
+const FW=SMALL?640:960, FH=SMALL?360:540, STRIDE=SMALL?380:560, SHEETS=SMALL?'sheets_m':'sheets', XDIR=SMALL?'xray_m':'xray';
+const N=240, PER=10, sheets=[]; let loaded=0;
 const loader=document.getElementById('loader');
-for(let s=0;s<N/PER;s++){const im=new Image();im.onload=()=>{im.ok=true;loaded++;loader.textContent=loaded<N/PER?`Loading ${loaded}/${N/PER}`:'';draw();};im.src=`sheets/s${String(s).padStart(2,'0')}.webp`;sheets[s]=im;}
+for(let s=0;s<N/PER;s++){const im=new Image();im.onload=()=>{im.ok=true;loaded++;loader.textContent=loaded<N/PER?`Loading ${loaded}/${N/PER}`:'';draw();};im.src=`${SHEETS}/s${String(s).padStart(2,'0')}.webp`;sheets[s]=im;}
+document.querySelectorAll('img[data-f]').forEach(im=>im.src=`${XDIR}/${im.dataset.f}`);
 const frameOk=i=>sheets[Math.floor((i-1)/PER)].ok;
 
 let SEGS=[], TOTAL=0, HOLDS=[];
@@ -329,7 +375,11 @@ const layersEl=document.getElementById('layers'), layerLis=[...layersEl.children
 const ym=document.getElementById('ym'), ymVal=ym.querySelector('.val');
 let cur=1, shift=0, segI=0, rect=null;
 
-function resize(){const d=devicePixelRatio||1;cv.width=innerWidth*d;cv.height=innerHeight*d;draw();}
+const stage=document.querySelector('.stage');
+let SW=innerWidth, SH=innerHeight;
+function resize(){const d=devicePixelRatio||1;SW=stage.clientWidth;SH=stage.clientHeight;cv.width=Math.round(SW*d);cv.height=Math.round(SH*d);draw();}
+// Mobil: Bild oben über die volle Breite (Chunk ~85 % breit), Text darunter
+function rectM(W,H){const w=W*1.15,h=w*9/16;return {x:W/2-.4995*w,y:Math.round(H*.11),w,h};}
 // Bildrechteck in CSS-px. Teil 1: zentriert nach Fit-Modus. Teil 2: kleiner, rechts neben dem Text, unten bündig.
 function rect1(W,H){
   let s=S.fit==='flush'?H/540:Math.min(W/960,H/540); s*=S.scale/100;
@@ -343,18 +393,23 @@ function draw(){
   if(!sheets.length)return;
   let f=cur; while(f>1&&!frameOk(f))f--; if(!frameOk(f))return;
   const im=sheets[Math.floor((f-1)/PER)], sy=((f-1)%PER)*STRIDE;
-  const d=devicePixelRatio||1, W=innerWidth, H=innerHeight; ctx.clearRect(0,0,cv.width,cv.height);
-  const a=rect1(W,H), k=W>900?ease(shift):0, b=k>0?rect2(W,H):a;
+  const d=devicePixelRatio||1, W=SW, H=SH, m=isM(); ctx.clearRect(0,0,cv.width,cv.height);
+  const a=m?rectM(W,H):rect1(W,H), k=m?0:ease(shift), b=k>0?rect2(W,H):a;
   const r={x:a.x+(b.x-a.x)*k,y:a.y+(b.y-a.y)*k,w:a.w+(b.w-a.w)*k,h:a.h+(b.h-a.h)*k};
   const x=r.x*d,y=r.y*d,w=r.w*d,h=r.h*d;
-  ctx.imageSmoothingQuality='high'; ctx.drawImage(im,0,sy,960,540,x,y,w,h);
-  if(S.fit==='fade'&&S.fade>0){ // Bildkanten ausblenden (unten nur, wenn die Kante sichtbar ist)
-    const fh=h*S.fade/100; ctx.globalCompositeOperation='destination-out';
+  ctx.imageSmoothingQuality='high'; ctx.drawImage(im,0,sy,FW,FH,x,y,w,h);
+  if((S.fit==='fade'&&S.fade>0)||m){ // Bildkanten ausblenden (unten nur, wenn die Kante sichtbar ist)
+    const fh=h*Math.max(S.fade,m?10:0)/100; ctx.globalCompositeOperation='destination-out';
     let g=ctx.createLinearGradient(0,y,0,y+fh);g.addColorStop(0,'#000');g.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=g;ctx.fillRect(x,y-1,w,fh+1);
     if(y+h<cv.height-2){g=ctx.createLinearGradient(0,y+h-fh,0,y+h);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,'#000');ctx.fillStyle=g;ctx.fillRect(x,y+h-fh,w,fh+1);}
     ctx.globalCompositeOperation='source-over';
   }
-  rect=r; placeMeter();
+  rect=r; placeMeter(); placeCards();
+}
+// Mobil: Textkarten und Titel direkt unter dem Bild
+function placeCards(){
+  const m=isM(), t=m&&rect?Math.round(rect.y+rect.h+16)+'px':'';
+  for(const c in cards)cards[c].style.top=t||'';
 }
 // Tiefenmeter: fester Platz an der linken Chunk-Ecke, Wert = oberster Block der Ecksäule
 function placeMeter(){
@@ -367,7 +422,7 @@ function placeMeter(){
 const ease=t=>t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
 const clamp=v=>Math.max(0,Math.min(1,v));
 function onSeq(){
-  const vh=innerHeight/100, top=seq.offsetTop;
+  const vh=SH/100, top=seq.offsetTop;
   const u=Math.max(0,Math.min(TOTAL,(scrollY-top)/vh));
   let f=1, si=SEGS.length-1;
   for(const [i,s] of SEGS.entries()){
@@ -376,7 +431,7 @@ function onSeq(){
   // Text: ist vollständig da, sobald die Animation stoppt; blendet vor dem Stopp ein und danach aus
   for(const h of HOLDS){
     const F=Math.min(25,S.fadeLen), o=clamp(Math.min((u-(h.a-F))/F,((h.b+F)-u)/F));
-    const c=cards[h.card]; c.style.opacity=o; c.style.pointerEvents=o>.5?'auto':'none'; c.style.transform=innerWidth>900?`translateY(${Math.round(-c.offsetHeight/2+(1-o)*24)}px)`:'none'; // ganze Pixel → Pixel-Font bleibt scharf
+    const c=cards[h.card]; c.style.opacity=o; c.style.pointerEvents=o>.5?'auto':'none'; c.style.transform=isM()?`translateY(${Math.round((1-o)*16)}px)`:`translateY(${Math.round(-c.offsetHeight/2+(1-o)*24)}px)`; // ganze Pixel → Pixel-Font bleibt scharf
   }
   // Bild wandert nach rechts, während der Intro-Text einblendet (Standbild-Frames 59–70)
   const intro=SEGS[1], F=Math.min(25,S.fadeLen), k=clamp((u-(intro.a-F))/F);
@@ -435,7 +490,7 @@ for(const id in G)G[id].curve=curve(G[id].gen);
 const col=document.getElementById('col'), mainImg=col.querySelector('.main'), bgImgs=[...col.querySelectorAll('img.bg')];
 const layerImg={};
 const stem={2:'g02_bedrock',10:'g10_granite',11:'g11_diorite',12:'g12_andesite',13:'g13_tuff',14:'g14_gravel',15:'g15_dirt',20:'g20_coal',21:'g21_copper',22:'g22_iron',23:'g23_lapis',24:'g24_gold',25:'g25_redstone',26:'g26_diamond'};
-for(const id in G){const im=document.createElement('img');im.className='grp';im.src=`xray/${stem[id]}.webp`;im.alt='';col.insertBefore(im,col.querySelector('.axis'));layerImg[id]=im;}
+for(const id in G){const im=document.createElement('img');im.className='grp';im.src=`${XDIR}/${stem[id]}.webp`;im.alt='';col.insertBefore(im,col.querySelector('.axis'));layerImg[id]=im;}
 
 // id-Map dekodieren (RLE, halbe Auflösung)
 const M=IDMAP, grid=new Uint8Array(M.w*M.h);
@@ -455,6 +510,7 @@ function renderX(){
   for(const id in layerImg)layerImg[id].classList.toggle('on',ids.includes(id));
   chips.querySelectorAll('.chip').forEach(c=>c.classList.toggle('on',c.dataset.k===filter));
   info(hover?String(hover):(G[filter]?filter:null));
+  if(typeof sheet==='function')sheet();
 }
 function setFilter(k,jump){filter=k;hover=0;renderX();
   if(jump&&G[k]){const s=col.clientWidth/IMG_W;const y=col.getBoundingClientRect().top+scrollY+M.stats[k].dense*s-innerHeight/2;scrollTo({top:y,behavior:'smooth'});}}
@@ -482,7 +538,13 @@ col.addEventListener('mousemove',e=>{
   const h=G[id]?id:0; if(h!==hover){hover=h;renderX();}
 });
 col.addEventListener('mouseleave',()=>{hover=0;tip.style.opacity=0;renderX();});
-col.addEventListener('click',()=>{if(hover)setFilter(String(hover),false);else if(filter!=='all')setFilter('all',false);});
+col.addEventListener('click',e=>{ // Position direkt auswerten → funktioniert auch per Touch
+  const r=mainImg.getBoundingClientRect(),s=IMG_W/r.width, id=idAt((e.clientX-r.left)*s,(e.clientY-r.top)*s);
+  if(G[id])setFilter(String(id),false); else if(filter!=='all')setFilter('all',false);});
+// Mobil: Infotafel nur zeigen, wenn etwas gewählt ist und der Xray-Teil im Bild ist
+const infoPanel=document.getElementById('infoPanel'); let xrayVisible=false;
+new IntersectionObserver(es=>{xrayVisible=es[0].isIntersecting;sheet();},{rootMargin:'-30% 0px -30% 0px'}).observe(document.getElementById('col'));
+function sheet(){infoPanel.classList.toggle('show',xrayVisible&&(filter!=='all'||hover));}
 // Klick ins Leere (außerhalb Säule und Filter) setzt auf All zurück
 document.getElementById('xray').addEventListener('click',e=>{if(filter!=='all'&&!e.target.closest('#col,#chips,.info'))setFilter('all',false);});
 
@@ -498,7 +560,7 @@ const GAP=8;
 let ticking=false;
 function onScroll(){if(ticking)return;ticking=true;requestAnimationFrame(()=>{onSeq();ticking=false;});}
 addEventListener('scroll',onScroll,{passive:true});
-addEventListener('resize',()=>{resize();onScroll();});
+addEventListener('resize',()=>{const was=document.documentElement.classList.contains('m');mcSizes();document.documentElement.classList.toggle('m',isM());resize();onScroll();if(was!==isM())renderX();});
 // Tweaks-Felder initial setzen
 tw.querySelectorAll('[data-k]').forEach(el=>{el.value=S[el.dataset.k];const o=el.parentElement.querySelector('output');if(o)o.textContent=S[el.dataset.k];});
 buildSegs();resize();applyTweaks();
