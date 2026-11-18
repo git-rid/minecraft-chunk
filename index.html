@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ein Chunk – Prototyp</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Pixelify+Sans:wght@400;500&family=Silkscreen&family=VT323&family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+@font-face{font-family:"Monocraft";src:url(fonts/monocraft.woff) format("woff");font-display:swap} /* Monocraft, Idrees Hassan, SIL OFL 1.1 */
+/* ---------- Themes & Tweaks (werden per JS gesetzt) ---------- */
+:root{
+  --bg:#ffffff; --fg:#141414; --muted:#6d6f73; --line:#e3e3e0; --panel:#f6f6f4; --chip:#f2f2f0; --outline:#141414; --tip-bg:#141414; --tip-fg:#fff;
+  --sans:Inter,system-ui,sans-serif; --label:"Monocraft",monospace; --label-size:1;
+  --sw-r:0px; --sw-o:0px;
+}
+html[data-theme=dark]{--bg:#0c0d0f;--fg:#f2f2ef;--muted:#9a9c9f;--line:#2a2c30;--panel:#111215;--chip:#16171a;--outline:#ffffff;--tip-bg:#f2f2ef;--tip-fg:#111}
+*{box-sizing:border-box;margin:0;padding:0}
+html{background:var(--bg);color:var(--fg);font-family:var(--sans);-webkit-font-smoothing:antialiased;transition:background .3s,color .3s}
+body{overflow-x:hidden}
+.lbl,.kicker{font-family:var(--label)}
+.kicker{font-size:calc(13px*var(--label-size));letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+h1{font-size:clamp(44px,7vw,104px);font-weight:700;letter-spacing:-.035em;line-height:.95}
+h2{font-size:clamp(30px,3.6vw,52px);font-weight:700;letter-spacing:-.025em;line-height:1.02}
+p{font-size:17px;line-height:1.55;color:var(--muted)}
+.sw{display:inline-block;width:10px;height:10px;border-radius:var(--sw-r);box-shadow:0 0 0 var(--sw-o) var(--muted);flex:none}
+
+/* ---------- Sequenz ---------- */
+#seq{position:relative}
+.stage{position:sticky;top:0;height:100vh;overflow:hidden}
+#cv{position:absolute;inset:0;width:100%;height:100%}
+.hero{position:absolute;left:0;right:0;top:12vh;text-align:center;pointer-events:none}
+.hero .kicker{margin-bottom:18px}
+.hint{position:absolute;left:50%;bottom:5vh;transform:translateX(-50%);font-family:var(--label);font-size:13px;color:var(--muted)}
+.card{position:absolute;left:6vw;top:50%;transform:translateY(-50%);width:min(380px,30vw);opacity:0;pointer-events:none;will-change:opacity,transform}
+.card .kicker{margin-bottom:14px}
+.card h2{margin-bottom:16px}
+.layers{position:absolute;right:4vw;top:64px;list-style:none;font-family:var(--label);font-size:calc(14px*var(--label-size));opacity:0;transition:opacity .4s}
+.layers li{display:flex;align-items:center;gap:10px;padding:6px 0;color:var(--muted);opacity:.45;transition:opacity .25s,color .25s}
+.layers li.on{opacity:1;color:var(--fg)}
+#ym{position:absolute;left:0;top:0;pointer-events:none;opacity:0;transition:opacity .3s}
+#ym .tick{position:absolute;right:0;top:-1px;width:22px;height:2px;background:var(--fg)}
+#ym .val{position:absolute;right:30px;bottom:-14px;font-family:var(--label);font-size:calc(22px*var(--label-size));white-space:nowrap;color:var(--fg);text-align:right;line-height:1}
+#ym .val small{display:block;font-size:.5em;color:var(--muted);margin-bottom:4px}
+.loader{position:fixed;left:16px;bottom:14px;font-family:var(--label);font-size:12px;color:var(--muted);z-index:20}
+
+/* ---------- Text-Pausen ---------- */
+.pause{display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:14vh 8vw;gap:22px}
+.pause p{max-width:620px;font-size:19px}
+
+/* ---------- Xray ---------- */
+#xray{position:relative;padding:var(--gap,14vh) 0 16vh}
+.xhead{text-align:center;padding:0 8vw 8vh}
+.xhead p{max-width:640px;margin:18px auto 0}
+.xgrid{display:grid;grid-template-columns:minmax(300px,1fr) auto minmax(240px,1fr);gap:3vw;padding:0 4vw;align-items:start}
+.panel{position:sticky;top:6vh;display:flex;flex-direction:column;gap:20px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;max-width:300px}
+.chip{border:1px solid var(--line);background:var(--chip);color:var(--fg);font-family:var(--label);font-size:calc(13px*var(--label-size));padding:6px 10px;cursor:pointer;display:flex;align-items:center;gap:7px}
+.chip:hover{border-color:var(--muted)}
+.chip.on{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.chipsep{width:100%;height:0}
+.info{border:1px solid var(--line);padding:18px;background:var(--panel);display:grid;grid-template-columns:1fr 92px;gap:16px;min-height:300px}
+.info h3{font-size:26px;font-weight:700;letter-spacing:-.02em;margin:6px 0 14px}
+.info dl{font-family:var(--label);font-size:calc(15px*var(--label-size))}
+.info dt{color:var(--muted);font-size:.8em;margin-top:10px}
+.info dd{margin-top:2px}
+.info .desc{grid-column:1/-1;font-size:14px;color:var(--muted);line-height:1.5}
+.info .src{grid-column:1/-1;font-family:var(--sans);font-size:11px;color:var(--muted);opacity:.7}
+.spark{width:92px;height:260px;overflow:visible}
+.spark text{font-family:var(--label);font-size:10px;fill:var(--muted)}
+
+.col{position:relative;width:min(560px,40vw);margin-left:130px}
+.col img{position:absolute;left:0;top:0;width:100%;height:auto;display:block;user-select:none;-webkit-user-drag:none;transition:opacity var(--xdur,500ms) ease-in-out}
+.col img.main{position:relative}
+.col img.bg{opacity:0}
+.col img.grp{opacity:0}
+.col img.grp.on{opacity:1}
+.axis{position:absolute;top:0;bottom:0;left:-110px;width:94px;pointer-events:none}
+.axis .t{position:absolute;right:16px;transform:translateY(-50%);font-family:var(--label);font-size:calc(12px*var(--label-size));color:var(--muted)}
+.axis .t::after{content:"";position:absolute;right:-12px;top:50%;width:8px;border-top:1px solid var(--muted)}
+.band{position:absolute;left:22px;width:8px}
+.band span{position:absolute;right:14px;top:50%;white-space:nowrap;font-family:var(--label);font-size:calc(12px*var(--label-size));letter-spacing:.06em;text-transform:uppercase;writing-mode:vertical-rl;transform:translateY(-50%) rotate(180deg);color:var(--muted)}
+
+.note{position:absolute;left:0;transform:translateY(-50%);font-size:13px;line-height:1.45;color:var(--muted);max-width:240px;padding-left:16px;border-left:1px solid var(--line)}
+.note b{display:block;font-family:var(--label);font-weight:400;font-size:calc(13px*var(--label-size));color:var(--fg);margin-bottom:3px}
+.tip{position:fixed;pointer-events:none;z-index:30;background:var(--tip-bg);color:var(--tip-fg);font-family:var(--label);font-size:13px;padding:5px 9px;opacity:0;transform:translate(14px,-50%);transition:opacity 200ms}
+.info{transition:opacity 200ms}
+html.editing .hero{pointer-events:auto}
+html.editing [data-t]{outline:1px dashed var(--muted);outline-offset:3px;cursor:text}
+/* Minecraft-Font: 1 Font-Pixel = 1/16 em → nur 16/32 px sind scharf */
+/* --mc-s / --mc-l werden per JS aus devicePixelRatio berechnet: 1 Font-Pixel = ganze Gerätepixel */
+html.mcfont .kicker,html.mcfont .hint,html.mcfont .layers,html.mcfont .chip,html.mcfont .info dl,html.mcfont .info dt,html.mcfont .axis .t,html.mcfont .band span,html.mcfont .tip,html.mcfont .loader,html.mcfont #ym .val small{font-size:var(--mc-s,16px);letter-spacing:0;-webkit-font-smoothing:none;text-rendering:optimizeSpeed}
+html.mcfont #ym .val{font-size:var(--mc-l,32px);-webkit-font-smoothing:none}
+html.mcfont #ym .tick{height:var(--mc-px,4px);top:0;width:calc(var(--mc-px,4px)*5)}
+html.mcfont #ym .val{right:calc(var(--mc-px,4px)*6);bottom:calc(var(--mc-px,4px)*-4)}
+html.mcfont .info dt{margin-top:12px}
+html.mcfont .spark text{font-family:var(--sans);font-size:10px}
+.kicker:empty{display:none}
+html.editing .kicker:empty{display:block;min-height:1em;min-width:4em}
+.placeholder{border:1px dashed var(--line);margin:0 8vw 20vh;min-height:60vh;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;text-align:center}
+
+/* ---------- Tweaks-Panel ---------- */
+#twBtn{position:fixed;right:16px;bottom:16px;z-index:50;font:600 12px var(--sans);padding:9px 13px;border:1px solid var(--line);background:var(--panel);color:var(--fg);cursor:pointer;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.12)}
+#tw{position:fixed;right:16px;bottom:62px;z-index:50;width:300px;max-height:calc(100vh - 90px);overflow:auto;background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:10px;padding:14px 16px;font:12px/1.4 var(--sans);box-shadow:0 10px 40px rgba(0,0,0,.18);display:none}
+#tw.open{display:block}
+#tw h4{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:14px 0 6px}
+#tw h4:first-child{margin-top:0}
+#tw label{display:grid;grid-template-columns:110px 1fr 38px;align-items:center;gap:8px;margin:5px 0}
+#tw label.sel{grid-template-columns:110px 1fr}
+#tw input[type=range]{width:100%}
+#tw select{width:100%;padding:3px;background:var(--bg);color:var(--fg);border:1px solid var(--line)}
+#tw output{text-align:right;font-family:var(--label);color:var(--muted)}
+#tw .row{display:flex;gap:8px;margin-top:12px}
+#tw button{flex:1;padding:7px;border:1px solid var(--line);background:var(--bg);color:var(--fg);cursor:pointer;font:600 12px var(--sans);border-radius:6px}
+#tw textarea{width:100%;height:110px;margin-top:8px;font:11px monospace;display:none}
+
+@media (max-width:900px){.card{left:5vw;right:5vw;width:auto;top:auto;bottom:8vh;transform:none}.layers{display:none}.xgrid{grid-template-columns:1fr}.panel{position:relative}.col{width:70vw}}
+</style>
+</head>
+<body>
+
+<!-- ============ 1–3: Sequence ============ -->
+<section id="seq">
+  <div class="stage">
+    <canvas id="cv"></canvas>
+    <div class="hero" id="hero">
+      <div class="kicker" data-t="hero.k">MINECRAFT / INFORMATION DESIGN</div>
+      <h1 data-t="hero.h">1 chunk</h1>
+    </div>
+    <div class="hint" id="hint">Scroll</div>
+
+    <div class="card" data-key="intro">
+      <div class="kicker" data-t="intro.k"></div>
+      <h2 data-t="intro.h">the world is made of chunks</h2>
+      <p data-t="intro.p">Minecraft loads its world in chunks: 16x16 block columns reaching from a height of Y −64 up to Y 319. This one holds 32,383 blocks, not counting air. What lies beneath the surface? Let’s take it apart, layer by layer.</p>
+    </div>
+    <div class="card" data-key="dirt">
+      <div class="kicker" data-t="dirt.k">LAYER 1</div>
+      <h2 data-t="dirt.h">Dirt</h2>
+      <p data-t="dirt.p">Beneath the grass lies a layer of soil only a few blocks thick. More dirt hides as blobs deep inside the stone.</p>
+    </div>
+    <div class="card" data-key="stone">
+      <div class="kicker" data-t="stone.k">LAYER 2</div>
+      <h2 data-t="stone.h">Stone</h2>
+      <p data-t="stone.p">The base rock of the upper world, laced with blobs of granite, diorite, andesite and gravel, and with the common ores: coal, copper and iron.</p>
+    </div>
+    <div class="card" data-key="deepslate">
+      <div class="kicker" data-t="deepslate.k">LAYER 3</div>
+      <h2 data-t="deepslate.h">Deepslate</h2>
+      <p data-t="deepslate.p">From Y 8 downward, stone gradually gives way to deepslate; below Y 0 there is nothing else. This is where tuff and the deep ores sit: gold, redstone, lapis and diamond.</p>
+    </div>
+    <div class="card" data-key="bedrock">
+      <div class="kicker" data-t="bedrock.k">LAYER 4</div>
+      <h2 data-t="bedrock.h">Bedrock</h2>
+      <p data-t="bedrock.p">The floor of the world. Unbreakable, with a ragged pattern that thins out toward Y −60.</p>
+    </div>
+
+    <div id="ym"><div class="tick"></div><div class="val"></div></div>
+
+    <ul class="layers" id="layers">
+      <li><span class="sw" style="background:#6aa84f"></span>Surface</li>
+      <li><span class="sw" style="background:#8b5d3b"></span>Dirt</li>
+      <li><span class="sw" style="background:#8d8f92"></span>Stone</li>
+      <li><span class="sw" style="background:#4b4f5a"></span>Deepslate</li>
+      <li><span class="sw" style="background:#2c2c2c"></span>Bedrock</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ 5: X-ray ============ -->
+<section id="xray">
+  <div class="xhead">
+    <div class="kicker" data-t="xray.k">X-RAY</div>
+    <h2 style="margin-top:14px" data-t="xray.h">hidden in the depths</h2>
+    <p data-t="xray.p">Hover over a group to highlight it. Click a filter to jump to where it is densest.</p>
+  </div>
+  <div class="xgrid">
+    <aside class="panel">
+      <div class="info" id="info"></div>
+    </aside>
+    <div class="col" id="col">
+      <img class="bg" data-bg="surface" src="xray/surface.webp" alt="">
+      <img class="bg" data-bg="full" src="xray/chunk_full.webp" alt="">
+      <img class="main" src="xray/main.webp" alt="X-ray view of the chunk">
+      <div class="axis" id="axis"></div>
+    </div>
+    <aside class="panel">
+      <div class="chips" id="chips"></div>
+    </aside>
+  </div>
+</section>
+
+<!-- ============ 6: Pause ============ -->
+<section class="pause">
+  <div class="kicker" data-t="tally.k">TALLY</div>
+  <h2 data-t="tally.h">32,383 blocks. How common is each one?</h2>
+  <p data-t="tally.p">Finally, we sort every block in the chunk by type and stack them into a chart.</p>
+</section>
+
+<!-- ============ 7: Placeholder ============ -->
+<div class="placeholder"><div class="kicker" data-t="p4.k">PART 4</div><h2 data-t="p4.h">bar chart made of blocks</h2><p data-t="p4.p">coming soon</p></div>
+
+<div class="tip" id="tip"></div>
+<div class="loader" id="loader"></div>
+
+<!-- ============ Tweaks ============ -->
+<button id="twBtn">Tweaks (T)</button>
+<div id="tw">
+  <h4>Look</h4>
+  <label class="sel">Background<select data-k="theme"><option value="light">White</option><option value="dark">Dark</option><option value="auto">Auto (system)</option></select></label>
+  <label class="sel">Label font<select data-k="labelFont"><option>Monocraft</option><option>Pixelify Sans</option><option>Silkscreen</option><option>VT323</option><option>Press Start 2P</option><option>JetBrains Mono</option><option>Inter</option></select></label>
+  <label>Label size<input type="range" data-k="labelSize" min="0.7" max="1.6" step="0.05"><output></output></label>
+  <label>Swatch radius<input type="range" data-k="swR" min="0" max="5" step="1"><output></output></label>
+  <label>Swatch outline<input type="range" data-k="swO" min="0" max="2" step="1"><output></output></label>
+  <h4>Scroll length (vh)</h4>
+  <label>Build-up<input type="range" data-k="build" min="40" max="300" step="10"><output></output></label>
+  <label>Intro stop<input type="range" data-k="intro" min="30" max="200" step="10"><output></output></label>
+  <label>Per layer<input type="range" data-k="trans" min="20" max="150" step="5"><output></output></label>
+  <label>Layer stop<input type="range" data-k="stop" min="20" max="150" step="5"><output></output></label>
+  <label>Bedrock out<input type="range" data-k="outro" min="20" max="150" step="5"><output></output></label>
+  <label>Text fade<input type="range" data-k="fadeLen" min="5" max="25" step="1"><output></output></label>
+  <label>Gap to X-ray<input type="range" data-k="gap" min="0" max="40" step="1"><output></output></label>
+  <h4>Sequence frame</h4>
+  <label class="sel">Part 1 fit<select data-k="fit"><option value="flush">Full height (flush)</option><option value="fade">Fit + fade edges</option><option value="contain">Fit (hard edges)</option></select></label>
+  <label>Part 1 size %<input type="range" data-k="scale" min="60" max="130" step="5"><output></output></label>
+  <label>Fade %<input type="range" data-k="fade" min="0" max="30" step="1"><output></output></label>
+  <label>Part 2 size %<input type="range" data-k="s2" min="50" max="100" step="5"><output></output></label>
+  <label>Part 2 gap px<input type="range" data-k="s2gap" min="0" max="200" step="10"><output></output></label>
+  <h4>X-ray</h4>
+  <label class="sel">Behind ores<select data-k="xbg"><option value="surface">Surface only</option><option value="full">Whole chunk</option><option value="none">Nothing</option></select></label>
+  <label>Opacity %<input type="range" data-k="xbgOp" min="0" max="100" step="5"><output></output></label>
+  <label>Rest opacity %<input type="range" data-k="rest" min="0" max="100" step="5"><output></output></label>
+  <label>Hover fade ms<input type="range" data-k="xdur" min="0" max="1500" step="50"><output></output></label>
+  <div class="row"><button id="twCopy">Copy settings</button><button id="twReset">Reset</button></div>
+  <h4>Texts</h4>
+  <label class="sel">Edit texts<select id="txEdit"><option value="0">Off</option><option value="1">On (click text to edit)</option></select></label>
+  <div class="row"><button id="txCopy">Copy texts</button><button id="txReset">Reset texts</button></div>
+  <textarea id="twOut" readonly></textarea>
+</div>
+
+<script src="idmap.js"></script>
+<script src="ymeter.js"></script>
+<script>
+/* ================= Tweaks ================= */
+const DEF={theme:'light',labelFont:'Monocraft',labelSize:0.8,swR:0,swO:0,build:100,intro:80,trans:80,stop:80,outro:30,gap:0,fadeLen:10,fit:'flush',scale:100,fade:10,s2:70,s2gap:80,xbg:'full',xbgOp:40,rest:35,xdur:400};
+const VER='v6'; // neue Standardwerte → alte gespeicherte Tweaks verwerfen
+let S={...DEF}; try{const o=JSON.parse(localStorage.getItem('chunkTweaks')||'{}');if(o._v===VER)Object.assign(S,o)}catch(e){}
+const tw=document.getElementById('tw');
+document.getElementById('twBtn').onclick=()=>tw.classList.toggle('open');
+addEventListener('keydown',e=>{if(e.key==='t'&&!/INPUT|SELECT|TEXTAREA/.test(e.target.tagName))tw.classList.toggle('open')});
+tw.querySelectorAll('[data-k]').forEach(el=>{
+  const k=el.dataset.k, out=el.parentElement.querySelector('output');
+  el.value=S[k]; if(out)out.textContent=S[k];
+  el.addEventListener('input',()=>{S[k]=el.type==='range'?+el.value:el.value;if(out)out.textContent=S[k];applyTweaks();});
+});
+document.getElementById('twReset').onclick=()=>{S={...DEF};tw.querySelectorAll('[data-k]').forEach(el=>{el.value=S[el.dataset.k];const o=el.parentElement.querySelector('output');if(o)o.textContent=S[el.dataset.k]});applyTweaks();};
+document.getElementById('twCopy').onclick=async()=>{const t=JSON.stringify(S);const ta=document.getElementById('twOut');ta.value=t;try{await navigator.clipboard.writeText(t);document.getElementById('twCopy').textContent='Copied ✓';setTimeout(()=>document.getElementById('twCopy').textContent='Copy settings',1500)}catch(e){ta.style.display='block';ta.select();}};
+
+/* Texte direkt bearbeiten: data-t-Elemente werden editierbar, Änderungen bleiben im Browser */
+const TX={}; document.querySelectorAll('[data-t]').forEach(el=>TX[el.dataset.t]=el.innerHTML);
+let T={}; try{T=JSON.parse(localStorage.getItem('chunkTexts')||'{}')}catch(e){}
+for(const k in T){const el=document.querySelector(`[data-t="${k}"]`);if(el)el.innerHTML=T[k];}
+document.getElementById('txEdit').onchange=e=>{const on=e.target.value==='1';document.documentElement.classList.toggle('editing',on);
+  document.querySelectorAll('[data-t]').forEach(el=>el.contentEditable=on);};
+document.addEventListener('input',e=>{const k=e.target.dataset&&e.target.dataset.t;if(!k)return;T[k]=e.target.innerHTML;try{localStorage.setItem('chunkTexts',JSON.stringify(T))}catch(_){}});
+document.getElementById('txCopy').onclick=async()=>{const all={};document.querySelectorAll('[data-t]').forEach(el=>all[el.dataset.t]=el.innerText.trim());const t=JSON.stringify(all,null,1);const ta=document.getElementById('twOut');ta.value=t;try{await navigator.clipboard.writeText(t);document.getElementById('txCopy').textContent='Copied ✓';setTimeout(()=>document.getElementById('txCopy').textContent='Copy texts',1500)}catch(e){ta.style.display='block';ta.select();}};
+document.getElementById('txReset').onclick=()=>{T={};try{localStorage.removeItem('chunkTexts')}catch(e){}for(const k in TX)document.querySelector(`[data-t="${k}"]`).innerHTML=TX[k];};
+
+// Hell/Dunkel nach Systemeinstellung (Theme „auto“)
+const darkMQ=matchMedia('(prefers-color-scheme: dark)');
+darkMQ.addEventListener('change',()=>{if(S.theme==='auto')applyTweaks();});
+// Pixel-Font: Schriftgröße auf ganze Gerätepixel pro Font-Pixel runden
+function mcSizes(){
+  // Monocraft: 9 Font-Pixel pro em → scharf bei 9·k Gerätepixeln. Klein: 2 Gerätepx/Font-Pixel (18 px), groß: 4 (36 px) bei 100 %
+  const d=devicePixelRatio||1, ks=Math.max(1,Math.round(2*d-.01)), kl=Math.max(2,Math.round(4*d-.01)) // bei Gleichstand kleiner, r=document.documentElement;
+  r.style.setProperty('--mc-s',(9*ks/d)+'px');
+  r.style.setProperty('--mc-l',(9*kl/d)+'px');
+  r.style.setProperty('--mc-px',(kl/d)+'px'); // 1 Font-Pixel der großen Zahl
+}
+matchMedia(`(resolution: ${devicePixelRatio}dppx)`).addEventListener('change',()=>{mcSizes();});
+addEventListener('resize',mcSizes);
+
+function applyTweaks(){
+  const r=document.documentElement;
+  r.dataset.theme=S.theme==='auto'?(darkMQ.matches?'dark':'light'):S.theme; r.classList.toggle('mcfont',S.labelFont==='Monocraft');
+  mcSizes();
+  r.style.setProperty('--xdur',S.xdur+'ms');
+  r.style.setProperty('--label',`"${S.labelFont}",monospace`);
+  r.style.setProperty('--label-size',S.labelSize*(S.labelFont==='Press Start 2P'?.7:S.labelFont==='VT323'?1.3:1));
+  r.style.setProperty('--sw-r',S.swR+'px'); r.style.setProperty('--sw-o',S.swO+'px');
+  r.style.setProperty('--gap',S.gap+'vh');
+  try{localStorage.setItem('chunkTweaks',JSON.stringify({...S,_v:VER}))}catch(e){}
+  buildSegs(); draw(); onScroll(); renderX();
+}
+
+/* ================= Sequence ================= */
+// 240 Frames in 24 Sprite-Sheets à 10 Frames, 20 px Abstand (verhindert Farbstreifen am Rand)
+const N=240, PER=10, STRIDE=560, sheets=[]; let loaded=0;
+const loader=document.getElementById('loader');
+for(let s=0;s<N/PER;s++){const im=new Image();im.onload=()=>{im.ok=true;loaded++;loader.textContent=loaded<N/PER?`Loading ${loaded}/${N/PER}`:'';draw();};im.src=`sheets/s${String(s).padStart(2,'0')}.webp`;sheets[s]=im;}
+const frameOk=i=>sheets[Math.floor((i-1)/PER)].ok;
+
+let SEGS=[], TOTAL=0, HOLDS=[];
+const seq=document.getElementById('seq');
+function buildSegs(){
+  SEGS=[
+    {f:[1,70],len:S.build},
+    {hold:70,len:S.intro,card:'intro'},
+    {f:[70,103],len:S.trans},
+    {hold:103,len:S.stop,card:'dirt'},
+    {f:[105,137],len:S.trans},
+    {hold:137,len:S.stop,card:'stone'},
+    {f:[139,171],len:S.trans},
+    {hold:171,len:S.stop,card:'deepslate'},
+    {f:[173,205],len:S.trans},
+    {hold:205,len:S.stop,card:'bedrock'},
+    {f:[207,240],len:S.outro},
+    {hold:240,len:15},            // leere Bühne, bevor weitergescrollt wird
+  ];
+  let acc=0; HOLDS=[];
+  SEGS.forEach((s,i)=>{s.a=acc;acc+=s.len;s.b=acc;if(s.card)HOLDS.push(s);});
+  TOTAL=acc;
+  seq.style.height=`calc(${TOTAL}vh + 100vh)`;
+}
+const cv=document.getElementById('cv'), ctx=cv.getContext('2d');
+const cards={}; document.querySelectorAll('.card').forEach(c=>cards[c.dataset.key]=c);
+const hero=document.getElementById('hero'), hint=document.getElementById('hint');
+const layersEl=document.getElementById('layers'), layerLis=[...layersEl.children];
+const ym=document.getElementById('ym'), ymVal=ym.querySelector('.val');
+let cur=1, shift=0, segI=0, rect=null;
+
+function resize(){const d=devicePixelRatio||1;cv.width=innerWidth*d;cv.height=innerHeight*d;draw();}
+// Bildrechteck in CSS-px. Teil 1: zentriert nach Fit-Modus. Teil 2: kleiner, rechts neben dem Text, unten bündig.
+function rect1(W,H){
+  let s=S.fit==='flush'?H/540:Math.min(W/960,H/540); s*=S.scale/100;
+  const w=960*s,h=540*s; return {x:(W-w)/2,y:S.fit==='flush'?H-h:(H-h)/2,w,h};
+}
+function rect2(W,H){
+  const h=H*S.s2/100,w=h*16/9, textR=W*.06+Math.min(380,W*.30);
+  return {x:textR+S.s2gap-YMETER.x*w,y:H-h,w,h};
+}
+function draw(){
+  if(!sheets.length)return;
+  let f=cur; while(f>1&&!frameOk(f))f--; if(!frameOk(f))return;
+  const im=sheets[Math.floor((f-1)/PER)], sy=((f-1)%PER)*STRIDE;
+  const d=devicePixelRatio||1, W=innerWidth, H=innerHeight; ctx.clearRect(0,0,cv.width,cv.height);
+  const a=rect1(W,H), k=W>900?ease(shift):0, b=k>0?rect2(W,H):a;
+  const r={x:a.x+(b.x-a.x)*k,y:a.y+(b.y-a.y)*k,w:a.w+(b.w-a.w)*k,h:a.h+(b.h-a.h)*k};
+  const x=r.x*d,y=r.y*d,w=r.w*d,h=r.h*d;
+  ctx.imageSmoothingQuality='high'; ctx.drawImage(im,0,sy,960,540,x,y,w,h);
+  if(S.fit==='fade'&&S.fade>0){ // Bildkanten ausblenden (unten nur, wenn die Kante sichtbar ist)
+    const fh=h*S.fade/100; ctx.globalCompositeOperation='destination-out';
+    let g=ctx.createLinearGradient(0,y,0,y+fh);g.addColorStop(0,'#000');g.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=g;ctx.fillRect(x,y-1,w,fh+1);
+    if(y+h<cv.height-2){g=ctx.createLinearGradient(0,y+h-fh,0,y+h);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,'#000');ctx.fillStyle=g;ctx.fillRect(x,y+h-fh,w,fh+1);}
+    ctx.globalCompositeOperation='source-over';
+  }
+  rect=r; placeMeter();
+}
+// Tiefenmeter: fester Platz an der linken Chunk-Ecke, Wert = oberster Block der Ecksäule
+function placeMeter(){
+  const M=YMETER, i=cur-M.start, on=segI>=2&&i>=0&&i<M.d.length&&rect;
+  ym.style.opacity=on?1:0; if(!on)return;
+  const d=devicePixelRatio||1, snap=v=>Math.round(v*d)/d; // auf Gerätepixel runden
+  ym.style.transform=`translate(${snap(rect.x+M.x*rect.w-6)}px,${snap(rect.y+M.y*rect.h)}px)`;
+  ymVal.innerHTML=`<small>Y</small>${M.d[i]}`;
+}
+const ease=t=>t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
+const clamp=v=>Math.max(0,Math.min(1,v));
+function onSeq(){
+  const vh=innerHeight/100, top=seq.offsetTop;
+  const u=Math.max(0,Math.min(TOTAL,(scrollY-top)/vh));
+  let f=1, si=SEGS.length-1;
+  for(const [i,s] of SEGS.entries()){
+    if(u<=s.b){si=i;const t=(u-s.a)/s.len; f=s.f?Math.round(s.f[0]+(s.f[1]-s.f[0])*t):s.hold; break;}
+  }
+  // Text: ist vollständig da, sobald die Animation stoppt; blendet vor dem Stopp ein und danach aus
+  for(const h of HOLDS){
+    const F=Math.min(25,S.fadeLen), o=clamp(Math.min((u-(h.a-F))/F,((h.b+F)-u)/F));
+    const c=cards[h.card]; c.style.opacity=o; c.style.pointerEvents=o>.5?'auto':'none'; c.style.transform=innerWidth>900?`translateY(${Math.round(-c.offsetHeight/2+(1-o)*24)}px)`:'none'; // ganze Pixel → Pixel-Font bleibt scharf
+  }
+  // Bild wandert nach rechts, während der Intro-Text einblendet (Standbild-Frames 59–70)
+  const intro=SEGS[1], F=Math.min(25,S.fadeLen), k=clamp((u-(intro.a-F))/F);
+  hero.style.opacity=Math.max(0,1-u/(S.build*.25)); hint.style.opacity=Math.max(0,1-u/12);
+  layersEl.style.opacity=si>=2&&si<SEGS.length-1?1:0;
+  const Lr=f<103?0:f<137?1:f<171?2:f<205?3:4; layerLis.forEach((li,i)=>li.classList.toggle('on',i===Lr));
+  if(f!==cur||k!==shift||si!==segI){cur=f;shift=k;segI=si;draw();}
+}
+
+/* ================= X-ray ================= */
+const IMG_W=1532, IMG_H=7541;
+const rowOfY=y=>7072.4-50.796*(y+64);
+// Allgemeine Worldgen-Daten (Java Edition, Vanilla). t = Dreieck (Spitze in der Mitte), u = gleichverteilt; w = Adern/Chunk × Adergröße
+const G={
+  2:{n:'Bedrock',k:'base',col:'#3a3a3a',range:'-64 to -60',peak:'Y -64',gen:[['b']],
+     d:'The floor of the world. Fills Y −64 completely and thins out in a random pattern up to Y −60. Cannot be broken in Survival.'},
+  10:{n:'Granite',k:'rock',col:'#9a6b57',range:'0 to 60, 64 to 128',peak:'even',gen:[[0,60,'u',2*64],[64,128,'u',64/6]],
+     d:'Large blobs inside stone, twice per chunk between Y 0 and 60, rarely higher up. Also part of large copper veins.'},
+  11:{n:'Diorite',k:'rock',col:'#c9c9c9',range:'0 to 60, 64 to 128',peak:'even',gen:[[0,60,'u',2*64],[64,128,'u',64/6]],
+     d:'Same pattern as granite: big pale blobs in stone, mostly between Y 0 and 60.'},
+  12:{n:'Andesite',k:'rock',col:'#8a8a8a',range:'0 to 60, 64 to 128',peak:'even',gen:[[0,60,'u',2*64],[64,128,'u',64/6]],
+     d:'Grey blobs with the same distribution as granite and diorite. Blobs can reach a little below Y 0.'},
+  13:{n:'Tuff',k:'rock',col:'#6f6f63',range:'-64 to 0',peak:'even',gen:[[-64,0,'u',2*64]],
+     d:'The deep counterpart to granite and co.: blobs below Y 0, inside deepslate. Also accompanies large iron veins.'},
+  14:{n:'Gravel',k:'rock',col:'#837d7b',range:'-64 to 320',peak:'even',gen:[[-64,320,'u',14*33]],
+     d:'Blobs at any height, from the bottom of the world to the surface.'},
+  15:{n:'Dirt (blobs)',k:'rock',col:'#8b5d3b',range:'0 to 160',peak:'even',gen:[[0,160,'u',7*33]],
+     d:'Besides the soil layer under the grass, dirt also forms blobs inside stone between Y 0 and 160.'},
+  20:{n:'Coal',k:'ore',col:'#3b3b3b',range:'0 to 320',peak:'Y 96',gen:[[0,192,'t',20*17],[136,320,'u',30*17]],
+     d:'The most common ore. Densest around Y 96 and spread evenly high up in mountains. Never below Y 0.'},
+  21:{n:'Copper',k:'ore',col:'#c8784e',range:'-16 to 112',peak:'Y 48',gen:[[-16,112,'t',16*10]],
+     d:'Concentrated around Y 48. Dripstone caves contain larger copper veins.'},
+  22:{n:'Iron',k:'ore',col:'#d8af93',range:'-64 to 320',peak:'Y 16 and Y 232',gen:[[-24,56,'t',10*9],[-64,72,'u',10*4],[80,384,'t',90*9]],
+     d:'Two peaks: Y 16 underground and Y 232 high in the mountains, plus small veins all the way down.'},
+  23:{n:'Lapis',k:'ore',col:'#2f5bb7',range:'-64 to 64',peak:'Y 0',gen:[[-32,32,'t',2*7],[-64,64,'u',4*7]],
+     d:'The only ore that peaks right at the stone–deepslate transition. Away from Y 0 it is mostly buried, not exposed to air.'},
+  24:{n:'Gold',k:'ore',col:'#e8c13a',range:'-64 to 32',peak:'Y -16',gen:[[-64,32,'t',4*9],[-64,-48,'u',.5*9]],
+     d:'Below Y 32, densest around Y −16. In badlands biomes it also appears high up, between Y 32 and 256 (not shown).'},
+  25:{n:'Redstone',k:'ore',col:'#d32f2f',range:'-64 to 15',peak:'Y -59',gen:[[-64,15,'u',4*8],[-96,-32,'t',8*8]],
+     d:'Below Y 16 and increasingly common toward the bottom of the world.'},
+  26:{n:'Diamond',k:'ore',col:'#3fcfc4',range:'-64 to 16',peak:'Y -59',gen:[[-144,16,'t',7*4],[-144,16,'t',4*8],[-144,16,'t',12/9],[-64,-4,'u',2*8]],
+     d:'The deeper, the more common: best just above bedrock. Many diamond veins are not allowed to touch air.'},
+};
+// Verteilungskurve Y −64…320 aus den Worldgen-Platzierungen
+function curve(gen){const a=new Float32Array(385);
+  for(const g of gen){
+    if(g[0]==='b'){for(let y=-64;y<=-60;y++)a[y+64]=(-59-y)/5;continue;}
+    const [lo,hi,t,w]=g;
+    for(let y=Math.max(lo,-64);y<=Math.min(hi,320);y++){
+      if(t==='u')a[y+64]+=w/(hi-lo+1);
+      else{const m=(lo+hi)/2,hw=(hi-lo)/2;a[y+64]+=w*Math.max(0,1-Math.abs(y-m)/hw)/hw;}}
+  }
+  const mx=Math.max(...a);return a.map(v=>v/mx);}
+for(const id in G)G[id].curve=curve(G[id].gen);
+
+const col=document.getElementById('col'), mainImg=col.querySelector('.main'), bgImgs=[...col.querySelectorAll('img.bg')];
+const layerImg={};
+const stem={2:'g02_bedrock',10:'g10_granite',11:'g11_diorite',12:'g12_andesite',13:'g13_tuff',14:'g14_gravel',15:'g15_dirt',20:'g20_coal',21:'g21_copper',22:'g22_iron',23:'g23_lapis',24:'g24_gold',25:'g25_redstone',26:'g26_diamond'};
+for(const id in G){const im=document.createElement('img');im.className='grp';im.src=`xray/${stem[id]}.webp`;im.alt='';col.insertBefore(im,col.querySelector('.axis'));layerImg[id]=im;}
+
+// id-Map dekodieren (RLE, halbe Auflösung)
+const M=IDMAP, grid=new Uint8Array(M.w*M.h);
+(()=>{const b=atob(M.rle);let p=0;for(let i=0;i<b.length;i+=2){const v=b.charCodeAt(i),n=b.charCodeAt(i+1);grid.fill(v,p,p+n);p+=n;}})();
+const idAt=(x,y)=>{const gx=Math.floor(x/M.s),gy=Math.floor(y/M.s);if(gx<0||gy<0||gx>=M.w||gy>=M.h)return 0;return grid[gy*M.w+gx];};
+
+const chips=document.getElementById('chips');
+let filter='all', hover=0;
+function chip(key,label,colr){const b=document.createElement('button');b.className='chip';b.dataset.k=key;b.innerHTML=(colr?`<span class="sw" style="background:${colr}"></span>`:'')+label;b.onclick=()=>setFilter(key,true);chips.appendChild(b);}
+[['all','All'],['ore','Ores'],['rock','Rocks']].forEach(([k,l])=>chip(k,l)); chips.appendChild(Object.assign(document.createElement('span'),{className:'chipsep'}));
+Object.entries(G).forEach(([id,g])=>chip(id,g.n,g.col));
+const idsFor=k=>k==='all'?[]:(k==='ore'||k==='rock')?Object.keys(G).filter(i=>G[i].k===k):[k];
+function renderX(){
+  const ids=hover?[String(hover)]:idsFor(filter), f=ids.length>0?S.rest/100:1;
+  mainImg.style.opacity=f; // Rest wird transparenter, gewählte Gruppe liegt voll deckend darüber
+  bgImgs.forEach(im=>{const on=im.dataset.bg===S.xbg;im.style.opacity=on?S.xbgOp/100*f:0;});
+  for(const id in layerImg)layerImg[id].classList.toggle('on',ids.includes(id));
+  chips.querySelectorAll('.chip').forEach(c=>c.classList.toggle('on',c.dataset.k===filter));
+  info(hover?String(hover):(G[filter]?filter:null));
+}
+function setFilter(k,jump){filter=k;hover=0;renderX();
+  if(jump&&G[k]){const s=col.clientWidth/IMG_W;const y=col.getBoundingClientRect().top+scrollY+M.stats[k].dense*s-innerHeight/2;scrollTo({top:y,behavior:'smooth'});}}
+const infoEl=document.getElementById('info');
+function spark(g){
+  const W=92,H=260,cx=34,cw=W-cx-4,ys=y=>H-(y+64)/384*H, c=g.curve;
+  let pts=`${cx},${ys(-64)} `; for(let y=-64;y<=320;y+=2)pts+=`${cx+c[y+64]*cw},${ys(y)} `; pts+=`${cx},${ys(320)}`;
+  const ticks=[-64,0,64,128,192,256,320].map(y=>`<text x="${cx-6}" y="${ys(y)+3}" text-anchor="end">${y}</text><line x1="${cx-3}" x2="${cx}" y1="${ys(y)}" y2="${ys(y)}" stroke="currentColor" opacity=".4"/>`).join('');
+  const fill=g.col==='#3b3b3b'&&S.theme==='dark'?'#888':g.col;
+  // markiert den Bereich, den die Säule zeigt (Y −64 … ~75)
+  return `<svg class="spark" viewBox="0 0 ${W} ${H}" style="color:var(--muted)"><rect x="${cx}" y="${ys(75)}" width="${cw}" height="${ys(-64)-ys(75)}" fill="currentColor" opacity=".08"/>${ticks}<line x1="${cx}" x2="${cx}" y1="0" y2="${H}" stroke="currentColor" opacity=".4"/><polygon points="${pts}" fill="${fill}"/></svg>`;
+}
+function info(id){
+  if(!id){const sel=filter==='all'?Object.keys(G):idsFor(filter);
+    infoEl.innerHTML=`<div style="grid-column:1/-1"><div class="kicker">${filter==='all'?'Overview':filter==='ore'?'Ores':'Rocks'}</div><h3>${sel.length} groups</h3><p class="desc" style="font-size:14px">Hover over the column or pick a filter to see where each block generates in the world, not just in this chunk.</p></div>`;return;}
+  const g=G[id];
+  infoEl.innerHTML=`<div><div class="kicker">${g.k==='ore'?'Ore':g.k==='rock'?'Rock':'Floor'}</div><h3>${g.n}</h3><dl><dt>Generates</dt><dd>Y ${g.range}</dd><dt>Most common</dt><dd>${g.peak}</dd></dl></div>${spark(g)}<div class="desc">${g.d}</div><div class="src">Distribution across the whole world height · vanilla world generation, Java Edition. Shaded: range shown in the column.</div>`;
+}
+const tip=document.getElementById('tip');
+col.addEventListener('mousemove',e=>{
+  const r=mainImg.getBoundingClientRect(),s=IMG_W/r.width;
+  const id=idAt((e.clientX-r.left)*s,(e.clientY-r.top)*s);
+  if(id&&G[id]){tip.textContent=G[id].n;tip.style.opacity=1;tip.style.left=e.clientX+'px';tip.style.top=e.clientY+'px';col.style.cursor='pointer';}
+  else{tip.style.opacity=0;col.style.cursor='';}
+  const h=G[id]?id:0; if(h!==hover){hover=h;renderX();}
+});
+col.addEventListener('mouseleave',()=>{hover=0;tip.style.opacity=0;renderX();});
+col.addEventListener('click',()=>{if(hover)setFilter(String(hover),false);else if(filter!=='all')setFilter('all',false);});
+// Klick ins Leere (außerhalb Säule und Filter) setzt auf All zurück
+document.getElementById('xray').addEventListener('click',e=>{if(filter!=='all'&&!e.target.closest('#col,#chips,.info'))setFilter('all',false);});
+
+// Achse, Schichtbänder (mit Lücken), Anmerkungen
+const axis=document.getElementById('axis'), pct=r=>(r/IMG_H*100)+'%';
+for(let y=-64;y<=72;y+=8){const d=document.createElement('div');d.className='t';d.style.top=pct(rowOfY(y));d.textContent=y;axis.appendChild(d);}
+const GAP=8;
+[[-64,-60,'#3a3a3a','Bedrock'],[-60,0,'#4b4f5a','Deepslate'],[0,8,'linear-gradient(#8d8f92,#4b4f5a)',''],[8,58,'#8d8f92','Stone'],[58,68,'#8b5d3b','Dirt']].forEach(([a,b,c,l])=>{
+  const d=document.createElement('div');d.className='band';
+  d.style.top=`calc(${pct(rowOfY(b))} + ${GAP/2}px)`;d.style.height=`calc(${(rowOfY(a)-rowOfY(b))/IMG_H*100}% - ${GAP}px)`;d.style.background=c;
+  if(l)d.innerHTML=`<span>${l}</span>`;axis.appendChild(d);});
+/* ================= Loop ================= */
+let ticking=false;
+function onScroll(){if(ticking)return;ticking=true;requestAnimationFrame(()=>{onSeq();ticking=false;});}
+addEventListener('scroll',onScroll,{passive:true});
+addEventListener('resize',()=>{resize();onScroll();});
+// Tweaks-Felder initial setzen
+tw.querySelectorAll('[data-k]').forEach(el=>{el.value=S[el.dataset.k];const o=el.parentElement.querySelector('output');if(o)o.textContent=S[el.dataset.k];});
+buildSegs();resize();applyTweaks();
+</script>
+</body>
+</html>
