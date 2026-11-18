@@ -53,7 +53,7 @@ p{font-size:17px;line-height:1.55;color:var(--muted)}
 .xhead{text-align:center;padding:0 8vw 8vh}
 .xhead p{max-width:640px;margin:18px auto 0}
 .xgrid{display:grid;grid-template-columns:minmax(300px,1fr) auto minmax(240px,1fr);gap:3vw;padding:0 4vw;align-items:start}
-.panel{position:sticky;top:6vh;display:flex;flex-direction:column;gap:20px}
+.panel{position:sticky;top:6vh;display:flex;flex-direction:column;gap:20px;min-width:0}
 .chips{display:flex;flex-wrap:wrap;gap:6px;max-width:300px}
 .chip{border:0px solid var(--line);background:var(--chip);color:var(--fg);font-family:var(--label);font-size:calc(13px*var(--label-size));padding:6px 10px;cursor:pointer;display:flex;align-items:center;gap:7px}
 .chip:hover{border-color:var(--muted)}
@@ -272,7 +272,7 @@ darkMQ.addEventListener('change',()=>{if(S.theme==='auto')applyTweaks();});
 // Pixel-Font: Schriftgröße auf ganze Gerätepixel pro Font-Pixel runden
 function mcSizes(){
   // Monocraft: 9 Font-Pixel pro em → scharf bei 9·k Gerätepixeln. Klein: 2 Gerätepx/Font-Pixel (18 px), groß: 4 (36 px) bei 100 %
-  const d=devicePixelRatio||1, ks=Math.max(1,Math.round(2*d-.01)), kl=Math.max(2,Math.round(4*d-.01)) // bei Gleichstand kleiner, r=document.documentElement;
+  const d=devicePixelRatio||1, ks=Math.max(1,Math.round(2*d-.01)), kl=Math.max(2,Math.round(4*d-.01)), r=document.documentElement; // bei Gleichstand kleiner
   r.style.setProperty('--mc-s',(9*ks/d)+'px');
   r.style.setProperty('--mc-l',(9*kl/d)+'px');
   r.style.setProperty('--mc-px',(kl/d)+'px'); // 1 Font-Pixel der großen Zahl
