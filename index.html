@@ -118,22 +118,21 @@ html.editing .kicker:empty{display:block;min-height:1em;min-width:4em}
 html.m h1{font-size:44px}
 html.m h2{font-size:28px}
 html.m p{font-size:15px}
-html.m .hero{top:auto;bottom:16vh}
+html.m .hero{top:5vh;padding:0 20px}
 html.m .hint{bottom:4vh}
 html.m .card{left:20px;right:20px;width:auto}
 html.m .card .kicker{margin-bottom:8px}
 html.m .card h2{margin-bottom:10px}
-html.m .layers{left:20px;right:20px;top:16px;display:flex;flex-wrap:wrap;gap:2px 14px}
+html.m .layers{left:0;right:0;top:auto;bottom:0;display:flex;flex-wrap:wrap;gap:2px 14px;padding:10px 20px calc(10px + env(safe-area-inset-bottom))} /* Bild endet darüber */
 html.m .layers li{padding:2px 0;gap:6px}
 html.m .layers .sw{width:8px;height:8px}
-html.m #ym .val{right:auto;left:calc(var(--mc-px,4px)*-4);bottom:calc(var(--mc-px,4px)*2)}
 html.m .pause{padding:10vh 20px}
 html.m .pause p{font-size:16px}
 html.m .xhead{padding:0 20px 5vh}
-html.m .xgrid{display:flex;flex-direction:column;padding:0 12px}
+html.m .xgrid{display:flex;flex-direction:column;align-items:stretch;padding:0 12px}
 html.m #chipPanel{order:-1}
 html.m #chipPanel{position:sticky;top:0;z-index:30;background:var(--bg);margin:0 -12px 12px;padding:10px 12px}
-html.m .chips{flex-wrap:nowrap;overflow-x:auto;max-width:none;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+html.m .chips{min-width:0;width:100%;flex-wrap:nowrap;overflow-x:auto;max-width:none;scrollbar-width:none;-webkit-overflow-scrolling:touch;touch-action:pan-x;cursor:grab;overscroll-behavior-x:contain}
 html.m .chips::-webkit-scrollbar{display:none}
 html.m .chip{flex:none;white-space:nowrap}
 html.m .chipsep{display:none}
@@ -313,7 +312,7 @@ darkMQ.addEventListener('change',()=>{if(S.theme==='auto')applyTweaks();});
 const isM=()=>{if(S.layout==='mobile')return true;if(S.layout==='desktop')return false;const w=Math.min(innerWidth,screen.width),h=Math.min(innerHeight,screen.height);return w<760||(h>w*1.15&&w<1000);};
 function mcSizes(){
   // Monocraft: 9 Font-Pixel pro em → scharf bei 9·k Gerätepixeln. Klein: 2 Gerätepx/Font-Pixel (18 px), groß: 4 (36 px) bei 100 %
-  const m=isM(), d=devicePixelRatio||1, ks=Math.max(1,Math.round((m?1.5:2)*d-.01)), kl=Math.max(2,Math.round((m?3:4)*d-.01)), r=document.documentElement; // bei Gleichstand kleiner; mobil kleinere Labels
+  const m=isM(), d=devicePixelRatio||1, ks=Math.max(1,Math.round((m?1.5:2)*d-.01)), kl=Math.max(2,Math.round((m?2.5:4)*d-.01)), r=document.documentElement; // bei Gleichstand kleiner; mobil kleinere Labels
   r.style.setProperty('--mc-s',(9*ks/d)+'px');
   r.style.setProperty('--mc-l',(9*kl/d)+'px');
   r.style.setProperty('--mc-px',(kl/d)+'px'); // 1 Font-Pixel der großen Zahl
@@ -378,8 +377,19 @@ let cur=1, shift=0, segI=0, rect=null;
 const stage=document.querySelector('.stage');
 let SW=innerWidth, SH=innerHeight;
 function resize(){const d=devicePixelRatio||1;SW=stage.clientWidth;SH=stage.clientHeight;cv.width=Math.round(SW*d);cv.height=Math.round(SH*d);draw();}
-// Mobil: Bild oben über die volle Breite (Chunk ~85 % breit), Text darunter
-function rectM(W,H){const w=W*1.15,h=w*9/16;return {x:W/2-.4995*w,y:Math.round(H*.11),w,h};}
+// Mobil: Breite/Mitte des sichtbaren Inhalts in Frame 1–70 (Anteil der Framebreite, geglättet) – gleicht das Hereinzoomen der Kamera aus
+const BOXW=[0.079,0.088,0.095,0.100,0.112,0.124,0.128,0.131,0.133,0.135,0.136,0.139,0.141,0.144,0.146,0.149,0.151,0.155,0.164,0.178,0.196,0.220,0.250,0.287,0.327,0.368,0.409,0.450,0.490,0.528,0.562,0.594,0.621,0.644,0.664,0.681,0.694,0.704,0.712,0.719,0.723,0.727,0.729,0.731,0.731,0.732,0.733,0.733,0.733,0.734,0.734,0.734,0.734,0.734,0.734,0.734,0.734,0.734,0.734,0.734,0.734,0.734,0.734,0.734,0.734,0.734,0.734,0.734,0.734,0.734],BOXC=[0.490,0.492,0.493,0.494,0.496,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499];
+const MG_L=64, MG_R=14; // fester Rand links für den Tiefenmeter
+// Mobil: Bild steht von Anfang an unten, direkt über der Schichtleiste (Unterkante yb); Titel bleibt oben
+const mBottom=H=>H-layersEl.offsetHeight-4;
+// Teil 1 mobil: so groß wie möglich zwischen Titel und Schichtleiste (Breite oder Höhe begrenzt)
+function rectM1(W,H,f){
+  const tb=Math.round(hero.offsetTop+hero.offsetHeight+12), yb=mBottom(H), i=Math.max(0,Math.min(69,f-1));
+  const aw=W-MG_L-MG_R, s=Math.min(aw/(BOXW[i]*960),(yb-tb)/540), w=960*s, h=540*s;
+  return {x:MG_L+aw/2-BOXC[i]*w,y:yb-h,w,h};
+}
+// Teil 2 mobil: Chunk füllt die Breite (linker Rand frei für den Meter), gleiche Unterkante
+function rectM2(W,H){const aw=W-MG_L-MG_R, w=aw/BOXW[69], h=w*9/16; return {x:MG_L-(BOXC[69]-BOXW[69]/2)*w,y:mBottom(H)-h,w,h};}
 // Bildrechteck in CSS-px. Teil 1: zentriert nach Fit-Modus. Teil 2: kleiner, rechts neben dem Text, unten bündig.
 function rect1(W,H){
   let s=S.fit==='flush'?H/540:Math.min(W/960,H/540); s*=S.scale/100;
@@ -394,12 +404,12 @@ function draw(){
   let f=cur; while(f>1&&!frameOk(f))f--; if(!frameOk(f))return;
   const im=sheets[Math.floor((f-1)/PER)], sy=((f-1)%PER)*STRIDE;
   const d=devicePixelRatio||1, W=SW, H=SH, m=isM(); ctx.clearRect(0,0,cv.width,cv.height);
-  const a=m?rectM(W,H):rect1(W,H), k=m?0:ease(shift), b=k>0?rect2(W,H):a;
+  const a=m?(cur>=70?rectM2(W,H):rectM1(W,H,cur)):rect1(W,H), k=m?0:ease(shift), b=k>0?rect2(W,H):a;
   const r={x:a.x+(b.x-a.x)*k,y:a.y+(b.y-a.y)*k,w:a.w+(b.w-a.w)*k,h:a.h+(b.h-a.h)*k};
   const x=r.x*d,y=r.y*d,w=r.w*d,h=r.h*d;
   ctx.imageSmoothingQuality='high'; ctx.drawImage(im,0,sy,FW,FH,x,y,w,h);
-  if((S.fit==='fade'&&S.fade>0)||m){ // Bildkanten ausblenden (unten nur, wenn die Kante sichtbar ist)
-    const fh=h*Math.max(S.fade,m?10:0)/100; ctx.globalCompositeOperation='destination-out';
+  if(S.fit==='fade'&&S.fade>0&&!m){ // Bildkanten ausblenden (unten nur, wenn die Kante sichtbar ist)
+    const fh=h*S.fade/100; ctx.globalCompositeOperation='destination-out';
     let g=ctx.createLinearGradient(0,y,0,y+fh);g.addColorStop(0,'#000');g.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=g;ctx.fillRect(x,y-1,w,fh+1);
     if(y+h<cv.height-2){g=ctx.createLinearGradient(0,y+h-fh,0,y+h);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,'#000');ctx.fillStyle=g;ctx.fillRect(x,y+h-fh,w,fh+1);}
     ctx.globalCompositeOperation='source-over';
@@ -408,8 +418,8 @@ function draw(){
 }
 // Mobil: Textkarten und Titel direkt unter dem Bild
 function placeCards(){
-  const m=isM(), t=m&&rect?Math.round(rect.y+rect.h+16)+'px':'';
-  for(const c in cards)cards[c].style.top=t||'';
+  const m=isM(), r2=m?rectM2(SW,SH):null, bt=m?Math.round(SH-(r2.y+.04*r2.h)+12)+'px':'';
+  for(const c in cards){cards[c].style.top=m?'auto':'';cards[c].style.bottom=bt;}
 }
 // Tiefenmeter: fester Platz an der linken Chunk-Ecke, Wert = oberster Block der Ecksäule
 function placeMeter(){
@@ -435,7 +445,8 @@ function onSeq(){
   }
   // Bild wandert nach rechts, während der Intro-Text einblendet (Standbild-Frames 59–70)
   const intro=SEGS[1], F=Math.min(25,S.fadeLen), k=clamp((u-(intro.a-F))/F);
-  hero.style.opacity=Math.max(0,1-u/(S.build*.25)); hint.style.opacity=Math.max(0,1-u/12);
+  hero.style.opacity=isM()?1-k:Math.max(0,1-u/(S.build*.25)); // mobil: Titel bleibt bis zum Intro-Text stehen
+  hint.style.opacity=Math.max(0,1-u/12);
   layersEl.style.opacity=si>=2&&si<SEGS.length-1?1:0;
   const Lr=f<103?0:f<137?1:f<171?2:f<205?3:4; layerLis.forEach((li,i)=>li.classList.toggle('on',i===Lr));
   if(f!==cur||k!==shift||si!==segI){cur=f;shift=k;segI=si;draw();}
@@ -502,6 +513,14 @@ let filter='all', hover=0;
 function chip(key,label,colr){const b=document.createElement('button');b.className='chip';b.dataset.k=key;b.innerHTML=(colr?`<span class="sw" style="background:${colr}"></span>`:'')+label;b.onclick=()=>setFilter(key,true);chips.appendChild(b);}
 [['all','All'],['ore','Ores'],['rock','Rocks']].forEach(([k,l])=>chip(k,l)); chips.appendChild(Object.assign(document.createElement('span'),{className:'chipsep'}));
 Object.entries(G).forEach(([id,g])=>chip(id,g.n,g.col));
+// Filterleiste: mit der Maus ziehen bzw. Mausrad → seitlich scrollen (auf Touch wischt der Browser selbst)
+(()=>{let x0=0,s0=0,down=false,moved=false;
+  chips.addEventListener('pointerdown',e=>{if(e.pointerType!=='mouse')return;down=true;moved=false;x0=e.clientX;s0=chips.scrollLeft;});
+  addEventListener('pointermove',e=>{if(!down)return;const dx=e.clientX-x0;if(Math.abs(dx)>4)moved=true;chips.scrollLeft=s0-dx;});
+  addEventListener('pointerup',()=>{down=false;});
+  chips.addEventListener('click',e=>{if(moved){e.stopPropagation();e.preventDefault();moved=false;}},true);
+  chips.addEventListener('wheel',e=>{if(chips.scrollWidth>chips.clientWidth&&Math.abs(e.deltaY)>Math.abs(e.deltaX)){chips.scrollLeft+=e.deltaY;e.preventDefault();}},{passive:false});
+})();
 const idsFor=k=>k==='all'?[]:(k==='ore'||k==='rock')?Object.keys(G).filter(i=>G[i].k===k):[k];
 function renderX(){
   const ids=hover?[String(hover)]:idsFor(filter), f=ids.length>0?S.rest/100:1;
