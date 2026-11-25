@@ -32,7 +32,7 @@ p{font-size:17px;line-height:1.55;color:var(--muted)}
 .hero{position:absolute;left:0;right:0;top:12vh;text-align:center;pointer-events:none;display:none} /* Titel vorerst weggelassen (25.11.) */
 .hero .kicker{margin-bottom:18px}
 .hint{position:absolute;left:50%;bottom:5vh;transform:translateX(-50%);font-family:var(--label);font-size:13px;color:var(--muted)}
-.card{position:absolute;left:6vw;top:50%;transform:translateY(-50%);width:min(380px,30vw);opacity:0;pointer-events:none;will-change:opacity,transform}
+.card{position:absolute;z-index:3;left:6vw;top:50%;transform:translateY(-50%);width:min(380px,30vw);opacity:0;pointer-events:none;will-change:opacity,transform}
 .card .kicker{margin-bottom:14px}
 .card h2{margin-bottom:16px}
 .layers{position:absolute;right:6vw;top:50%;list-style:none;font-family:var(--label);font-size:calc(14px*var(--label-size));opacity:0;transition:opacity .4s}
@@ -47,7 +47,7 @@ p{font-size:17px;line-height:1.55;color:var(--muted)}
 .pause p{max-width:620px;font-size:19px}
 
 /* ---------- Xray ---------- */
-#xray{position:relative;padding:var(--gap,14vh) 0 16vh}
+#xray{position:relative;padding:var(--gap,14vh) 0 16vh;margin-top:-30vh} /* Lücke nach Teil 2 etwa halbiert (Bühne ist am Ende leer, Xray schiebt sich darüber) */
 .xhead{text-align:center;padding:0 8vw 8vh}
 .xhead p{max-width:640px;margin:18px auto 0}
 .xgrid{display:grid;grid-template-columns:minmax(300px,1fr) auto minmax(240px,1fr);gap:3vw;padding:0 4vw;align-items:start}
@@ -55,6 +55,7 @@ p{font-size:17px;line-height:1.55;color:var(--muted)}
 .xgrid.same{gap:0;padding:0}
 .xleft{position:sticky;top:6vh;display:flex;flex-direction:column;gap:20px;padding:0 134px 0 4vw;min-width:0}
 .xleft .panel{position:static}
+.xgrid.same>#chipPanel{padding:0 4vw 0 3vw;align-items:flex-start}
 .panel{position:sticky;top:6vh;display:flex;flex-direction:column;gap:20px;min-width:0}
 .chips{display:flex;flex-wrap:wrap;gap:6px;max-width:300px}
 .chip{border:0px solid var(--line);background:var(--chip);color:var(--fg);font-family:var(--label);font-size:calc(13px*var(--label-size));padding:6px 10px;cursor:pointer;display:flex;align-items:center;gap:7px}
@@ -170,7 +171,7 @@ html.m .col{width:calc(100vw - 24px - 60px);margin-left:60px}
 html.m .axis{left:-58px;width:54px}
 html.m .axis .t{right:6px}
 html.m #yax{width:54px}
-html.m .band{left:0;width:6px}
+html.m .band{left:8px;width:5px} /* Achse liegt mobil teils links außerhalb – Streifen weiter rein */
 html.m .band span{display:none}
 html.m .tip{display:none}
 html.m #infoPanel{position:fixed;left:0;right:0;bottom:0;top:auto;z-index:40;transform:translateY(105%);transition:transform .35s ease}
@@ -418,7 +419,7 @@ function apTry(){
 }
 function apTick(ts){
   if(AP.state!=='play')return; const p=(ts-AP.t0)/(S.p1dur*1000);
-  AP.f=Math.min(70,1+Math.floor(p*70)); if(p>=1){AP.state='done';AP.f=70;AP.tDone=performance.now();}
+  AP.f=Math.max(1,Math.min(70,1+Math.floor(p*70))); // rAF-Zeitstempel kann knapp vor t0 liegen → p < 0 if(p>=1){AP.state='done';AP.f=70;AP.tDone=performance.now();}
   onSeq(); if(AP.state==='play')requestAnimationFrame(apTick);
 }
 const seq=document.getElementById('seq');
@@ -497,6 +498,9 @@ function layoutXray(){
   const col=document.getElementById('col'), ax=document.getElementById('axis'), grid=document.querySelector('.xgrid'); if(!col)return;
   const b=chunkBox(), cw=b.cw/XW, left=b.X-XL*cw;
   col.style.width=cw+'px';
+  // Filter rechts neben dem Chunk, solange dort Platz ist (≥ 240 px + Abstände), sonst links über der Info
+  const chips=document.getElementById('chipPanel'), xl=document.querySelector('.xleft'), W=innerWidth, room=W-(b.X+b.cw)>=240+W*.07;
+  if(!isM()&&room){if(chips.parentNode!==grid)grid.appendChild(chips);} else if(chips.parentNode!==xl)xl.insertBefore(chips,xl.firstChild);
   if(isM()){grid.classList.remove('same');grid.style.gridTemplateColumns='';col.style.marginLeft=(left-12)+'px';}
   else{grid.classList.add('same');grid.style.gridTemplateColumns=`${left}px ${cw}px 1fr`;col.style.marginLeft='0';}
   ax.style.left=(XL*cw-16-ax.offsetWidth)+'px'; // rechte Kante 16 px links der Chunk-Ecke wie in Teil 2
