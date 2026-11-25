@@ -181,7 +181,9 @@ html.m .info h3{font-size:22px;margin:4px 0 8px}
 html.m .spark{width:70px;height:150px}
 html.m .placeholder{margin:0 20px 12vh;min-height:40vh}
 html.m #chest{padding:2vh 12px 12vh}
-html.m .card{background:var(--bg);padding:6px 20px 10px;left:0;right:0} /* verdeckt die Y-Achse hinter dem Text (volle Breite, sonst ragen die Achsenzahlen links heraus) */
+html.m .card{padding:6px 20px 10px;left:0;right:0}
+/* mobil: Fläche hinter dem Text verdeckt die Achsenzahlen (Schichtstreifen ganz links bleibt sichtbar), oben/unten weich auslaufend */
+html.m .card::before{content:"";position:absolute;z-index:-1;left:12px;right:0;top:-28px;bottom:-28px;background:linear-gradient(transparent,var(--bg) 28px,var(--bg) calc(100% - 28px),transparent);pointer-events:none}
 html.m #tw{left:12px;right:12px;width:auto;bottom:60px}
 </style>
 </head>
@@ -419,7 +421,7 @@ function apTry(){
 }
 function apTick(ts){
   if(AP.state!=='play')return; const p=(ts-AP.t0)/(S.p1dur*1000);
-  AP.f=Math.max(1,Math.min(70,1+Math.floor(p*70))); // rAF-Zeitstempel kann knapp vor t0 liegen → p < 0 if(p>=1){AP.state='done';AP.f=70;AP.tDone=performance.now();}
+  AP.f=Math.max(1,Math.min(70,1+Math.floor(p*70))); if(p>=1){AP.state='done';AP.f=70;AP.tDone=performance.now();} // max(1,…): rAF-Zeitstempel kann knapp vor t0 liegen → p < 0
   onSeq(); if(AP.state==='play')requestAnimationFrame(apTick);
 }
 const seq=document.getElementById('seq');
@@ -532,8 +534,9 @@ function draw(){
 // Mobil: Textkarten und Titel direkt unter dem Bild
 function placeCards(){
   // mobil: Karte endet über der höchsten Stelle des Chunks (hintere Ecke; zu Beginn von Teil 2 liegt die Oberkante bis zu 5 Lagen höher)
-  const m=isM(), r2=m?rectM2(SW,SH):null, bt=m?Math.round(SH-(r2.y+(YA.back-5*YA.k)*r2.h)+12)+'px':'';
-  for(const c in cards){cards[c].style.top=m?'auto':'';cards[c].style.bottom=bt;}
+  // Intro: Frame 70 ist oben transparent (Baumspitze erst bei 5,2 % der Bildhöhe) → Karte darf bis dorthin herunterreichen
+  const m=isM(), r2=m?rectM2(SW,SH):null, bb=f=>Math.round(SH-(r2.y+f*r2.h)+12)+'px';
+  for(const c in cards){cards[c].style.top=m?'auto':'';cards[c].style.bottom=m?bb(c==='intro'?.052:YA.back-5*YA.k):'';}
   // Schichtliste am Desktop vertikal zentriert (wie der Text links), auf ganze Pixel gerundet
   layersEl.style.transform=m?'':`translateY(${-Math.round(layersEl.offsetHeight/2)}px)`;
 }
