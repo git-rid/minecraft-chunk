@@ -99,6 +99,30 @@ html.mcfont .spark text{font-family:var(--sans);font-size:10px}
 html.editing .kicker:empty{display:block;min-height:1em;min-width:4em}
 .placeholder{border:1px dashed var(--line);margin:0 8vw 20vh;min-height:60vh;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;text-align:center}
 
+/* ---------- Teil 4: Truhe / Inventar (Minecraft-Truhen-GUI nachgebaut; --u = 1 GUI-Pixel, per JS auf ganze Gerätepixel gerundet) ---------- */
+#chest{position:relative;padding:2vh 4vw 22vh;display:flex;flex-direction:column;align-items:center}
+.chestStage{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;min-height:62vh}
+.chestBtn{background:none;border:0;padding:0;cursor:pointer;transition:transform .2s ease}
+.chestBtn:hover{transform:translateY(-6px)}
+.chestBtn canvas{display:block}
+.invWrap{position:relative;display:none;opacity:0;transform:translateY(14px);transition:opacity .35s ease,transform .35s ease}
+#chest.open .chestStage{display:none}
+#chest.open .invWrap{display:block}
+#chest.shown .invWrap{opacity:1;transform:none}
+.mcgui{--u:3px;position:relative}
+.mcgui>canvas{position:absolute;left:0;top:0;width:100%;height:100%}
+.mctitle{position:absolute;left:calc(var(--u)*8);top:calc(var(--u)*5);font-family:"Monocraft",monospace;font-size:calc(var(--u)*9);line-height:1;color:#404040;-webkit-font-smoothing:none;white-space:nowrap;pointer-events:none}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.invFoot{margin-top:22px;text-align:center}
+.mctip{position:fixed;z-index:32;pointer-events:none;opacity:0;background:rgba(16,0,16,.94);border:2px solid;border-image:linear-gradient(#5000ff,#28007f) 1;box-shadow:0 0 0 2px rgba(16,0,16,.94);
+  padding:6px 9px;font-family:"Monocraft",monospace;font-size:var(--mc-s,18px);line-height:1.4;color:#fff;white-space:nowrap;-webkit-font-smoothing:none}
+.mctip i{display:block;font-style:normal;color:#aaa}
+.mctip i.dim{color:#6f6f6f}
+.mcpin{position:absolute;left:calc(100% + 16px);transform:translateY(-50%);pointer-events:none;opacity:0;transition:opacity .2s}
+.mcpin.on{opacity:1}
+html.m .mcpin{left:0;right:0;transform:none;white-space:normal;z-index:33}
+html.m .invFoot{display:none}
+
 /* ---------- Tweaks-Panel ---------- */
 #twBtn{position:fixed;right:16px;bottom:16px;z-index:50;font:600 12px var(--sans);padding:9px 13px;border:1px solid var(--line);background:var(--panel);color:var(--fg);cursor:pointer;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.12)}
 #tw{position:fixed;right:16px;bottom:62px;z-index:50;width:300px;max-height:calc(100vh - 90px);overflow:auto;background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:10px;padding:14px 16px;font:12px/1.4 var(--sans);box-shadow:0 10px 40px rgba(0,0,0,.18);display:none}
@@ -148,6 +172,7 @@ html.m .info{min-height:0;max-height:46vh;overflow:auto;padding:16px 20px 20px;b
 html.m .info h3{font-size:22px;margin:4px 0 8px}
 html.m .spark{width:70px;height:150px}
 html.m .placeholder{margin:0 20px 12vh;min-height:40vh}
+html.m #chest{padding:2vh 12px 12vh}
 html.m #tw{left:12px;right:12px;width:auto;bottom:60px}
 </style>
 </head>
@@ -169,22 +194,22 @@ html.m #tw{left:12px;right:12px;width:auto;bottom:60px}
       <p data-t="intro.p">Minecraft loads its world in chunks: 16x16 block columns reaching from a height of Y −64 up to Y 319. This one holds 32,383 blocks, not counting air. What lies beneath the surface? Let’s take it apart, layer by layer.</p>
     </div>
     <div class="card" data-key="dirt">
-      <div class="kicker" data-t="dirt.k">LAYER 1</div>
+      <div class="kicker" data-t="dirt.k"></div>
       <h2 data-t="dirt.h">Dirt</h2>
       <p data-t="dirt.p">Beneath the grass lies a layer of soil only a few blocks thick. More dirt hides as blobs deep inside the stone.</p>
     </div>
     <div class="card" data-key="stone">
-      <div class="kicker" data-t="stone.k">LAYER 2</div>
+      <div class="kicker" data-t="stone.k"></div>
       <h2 data-t="stone.h">Stone</h2>
       <p data-t="stone.p">The base rock of the upper world, laced with blobs of granite, diorite, andesite and gravel, and with the common ores: coal, copper and iron.</p>
     </div>
     <div class="card" data-key="deepslate">
-      <div class="kicker" data-t="deepslate.k">LAYER 3</div>
+      <div class="kicker" data-t="deepslate.k"></div>
       <h2 data-t="deepslate.h">Deepslate</h2>
       <p data-t="deepslate.p">From Y 8 downward, stone gradually gives way to deepslate; below Y 0 there is nothing else. This is where tuff and the deep ores sit: gold, redstone, lapis and diamond.</p>
     </div>
     <div class="card" data-key="bedrock">
-      <div class="kicker" data-t="bedrock.k">LAYER 4</div>
+      <div class="kicker" data-t="bedrock.k"></div>
       <h2 data-t="bedrock.h">Bedrock</h2>
       <p data-t="bedrock.p">The floor of the world. Unbreakable, with a ragged pattern that thins out toward Y −60.</p>
     </div>
@@ -204,8 +229,8 @@ html.m #tw{left:12px;right:12px;width:auto;bottom:60px}
 <!-- ============ 5: X-ray ============ -->
 <section id="xray">
   <div class="xhead">
-    <div class="kicker" data-t="xray.k">X-RAY</div>
-    <h2 style="margin-top:14px" data-t="xray.h">hidden in the depths</h2>
+    <div class="kicker" data-t="xray.k"></div>
+    <h2 data-t="xray.h">hidden in the depths</h2>
     <p data-t="xray.p">Select a group to highlight it. Click a filter to jump to where it is densest.</p>
   </div>
   <div class="xgrid">
@@ -226,13 +251,27 @@ html.m #tw{left:12px;right:12px;width:auto;bottom:60px}
 
 <!-- ============ 6: Pause ============ -->
 <section class="pause">
-  <div class="kicker" data-t="tally.k">TALLY</div>
+  <div class="kicker" data-t="tally.k"></div>
   <h2 data-t="tally.h">32,383 blocks. How common is each one?</h2>
-  <p data-t="tally.p">Finally, we sort every block in the chunk by type and stack them into a chart.</p>
+  <p data-t="tally.p">Every block we dug out went straight into a chest, mined with Silk Touch, so each one dropped itself. Only bedrock, water and lava stayed behind.</p>
 </section>
 
-<!-- ============ 7: Placeholder ============ -->
-<div class="placeholder"><div class="kicker" data-t="p4.k">PART 4</div><h2 data-t="p4.h">bar chart made of blocks</h2><p data-t="p4.p">coming soon</p></div>
+<!-- ============ 7: Teil 4 – Truhe / Inventar ============ -->
+<section id="chest">
+  <div class="chestStage">
+    <button class="chestBtn" id="chestBtn" aria-label="Open the chest"><canvas id="chestCv"></canvas></button> <!-- Platzhalter: wird durch Blender-Render der Truhe ersetzt -->
+    <div class="kicker" data-t="chest.hint">click to open</div>
+  </div>
+  <div class="invWrap" id="invWrap">
+    <div class="mcgui" id="mcgui"><canvas id="mcpanel" aria-hidden="true"></canvas>
+      <div class="mctitle" data-t="chest.title">Chest</div>
+      <ul class="sr-only" id="invList" aria-label="Chest contents"></ul>
+    </div>
+    <div class="mctip mcpin" id="mcpin"></div>
+    <div class="kicker invFoot" data-t="chest.foot">esc to close</div>
+  </div>
+</section>
+<div class="mctip" id="mctip"></div>
 
 <div class="tip" id="tip"></div>
 <div class="loader" id="loader"></div>
@@ -267,6 +306,8 @@ html.m #tw{left:12px;right:12px;width:auto;bottom:60px}
   <label>Opacity %<input type="range" data-k="xbgOp" min="0" max="100" step="5"><output></output></label>
   <label>Rest opacity %<input type="range" data-k="rest" min="0" max="100" step="5"><output></output></label>
   <label>Hover fade ms<input type="range" data-k="xdur" min="0" max="1500" step="50"><output></output></label>
+  <h4>Part 4 – chest</h4>
+  <label>GUI scale<input type="range" data-k="invScale" min="2" max="5" step="1"><output></output></label>
   <div class="row"><button id="twCopy">Copy settings</button><button id="twReset">Reset</button></div>
   <h4>Texts</h4>
   <label class="sel">Edit texts<select id="txEdit"><option value="0">Off</option><option value="1">On (click text to edit)</option></select></label>
@@ -276,9 +317,10 @@ html.m #tw{left:12px;right:12px;width:auto;bottom:60px}
 
 <script src="idmap.js"></script>
 <script src="ymeter.js"></script>
+<script src="invtex.js"></script>
 <script>
 /* ================= Tweaks ================= */
-const DEF={theme:'light',labelFont:'Monocraft',labelSize:0.8,swR:0,swO:0,build:200,intro:80,trans:80,stop:80,outro:30,gap:0,fadeLen:10,fit:'flush',scale:100,fade:10,s2:70,s2gap:80,xbg:'full',xbgOp:40,rest:35,xdur:400,layout:'auto',imgset:'auto'};
+const DEF={theme:'light',labelFont:'Monocraft',labelSize:0.8,swR:0,swO:0,build:200,intro:80,trans:80,stop:80,outro:30,gap:0,fadeLen:10,fit:'flush',scale:100,fade:10,s2:70,s2gap:80,xbg:'full',xbgOp:40,rest:35,xdur:400,layout:'auto',imgset:'auto',invScale:3};
 const VER='v7'; // neue Standardwerte → alte gespeicherte Tweaks verwerfen
 let S={...DEF}; try{const o=JSON.parse(localStorage.getItem('chunkTweaks')||'{}');if(o._v===VER)Object.assign(S,o)}catch(e){}
 const tw=document.getElementById('tw');
@@ -326,6 +368,7 @@ function applyTweaks(){
   r.dataset.theme=S.theme==='auto'?(darkMQ.matches?'dark':'light'):S.theme; r.classList.toggle('mcfont',S.labelFont==='Monocraft');
   mcSizes();
   r.style.setProperty('--xdur',S.xdur+'ms');
+  invApply(); // Teil 4: Truhen-GUI skalieren
   r.style.setProperty('--label',`"${S.labelFont}",monospace`);
   r.style.setProperty('--label-size',S.labelSize*(S.labelFont==='Press Start 2P'?.7:S.labelFont==='VT323'?1.3:1));
   r.style.setProperty('--sw-r',S.swR+'px'); r.style.setProperty('--sw-o',S.swO+'px');
@@ -577,6 +620,123 @@ const GAP=8;
   const d=document.createElement('div');d.className='band';
   d.style.top=`calc(${pct(rowOfY(b))} + ${GAP/2}px)`;d.style.height=`calc(${(rowOfY(a)-rowOfY(b))/IMG_H*100}% - ${GAP}px)`;d.style.background=c;
   if(l)d.innerHTML=`<span>${l}</span>`;axis.appendChild(d);});
+/* ================= Teil 4: Truhe / Inventar ================= */
+// Silk Touch: jeder abgebaute Block droppt sich selbst. Nur Boden/Untergrund: ohne Bedrock, Wasser, Lava, Gras, Blumen, Baum, Seerose.
+// Erze: normale und Deepslate-Variante bilden eine Familie (zusammengezählt, nebeneinander einsortiert).
+// [id, Name, Anzahl, Familie, Textur oben, Textur Seite] (Texturen in invtex.js; ohne Angabe = id)
+const INV_RAW=[
+ ['deepslate','Deepslate',14242,'Deepslate','deepslate_top'],['stone','Stone',10068],['tuff','Tuff',1507],['andesite','Andesite',1179],
+ ['granite','Granite',1134],['dirt','Dirt',1098],['diorite','Diorite',999],['gravel','Gravel',378],
+ ['grass_block','Grass Block',205,0,'grass_block_top_y','grass_block_side_y'],['sand','Sand',117],
+ ['coal_ore','Coal Ore',131,'Coal Ore'],
+ ['copper_ore','Copper Ore',102,'Copper Ore'],['deepslate_copper_ore','Deepslate Copper Ore',6,'Copper Ore'],
+ ['iron_ore','Iron Ore',58,'Iron Ore'],['deepslate_iron_ore','Deepslate Iron Ore',28,'Iron Ore'],
+ ['deepslate_redstone_ore','Deepslate Redstone Ore',50,'Redstone Ore'],
+ ['lapis_ore','Lapis Lazuli Ore',8,'Lapis Lazuli Ore'],['deepslate_lapis_ore','Deepslate Lapis Lazuli Ore',26,'Lapis Lazuli Ore'],
+ ['deepslate_gold_ore','Deepslate Gold Ore',33,'Gold Ore'],
+ ['diamond_ore','Diamond Ore',4,'Diamond Ore'],['deepslate_diamond_ore','Deepslate Diamond Ore',17,'Diamond Ore']];
+// Familien bilden, nach Familiensumme absteigend sortieren, innerhalb der Familie nach Anzahl
+const FAM=Object.values(INV_RAW.reduce((m,[id,name,cnt,fam,tp,sd])=>{const f=fam||name;(m[f]=m[f]||{name:f,total:0,items:[]}).total+=cnt;m[f].items.push({id,name,cnt,tp,sd});return m;},{}))
+  .sort((a,b)=>b.total-a.total); FAM.forEach(f=>f.items.sort((a,b)=>b.cnt-a.cnt));
+const INV_TOTAL=FAM.reduce((s,f)=>s+f.total,0);
+const fmtN=n=>n.toLocaleString('en-US'), pctS=n=>{const p=n/INV_TOTAL*100;return (p>=1?p.toFixed(1):p.toFixed(2))+' %';};
+// Slots in Reihenfolge: {f: Familie, it: Item, k: Stackgröße}
+const SLOTS=[]; FAM.forEach((f,fi)=>f.items.forEach(it=>{for(let left=it.cnt;left>0;left-=64)SLOTS.push({f:fi,it,k:Math.min(64,left)});}));
+const ROWS=Math.ceil(SLOTS.length/9);
+const chestSec=document.getElementById('chest'), mcgui=document.getElementById('mcgui'), cvP=document.getElementById('mcpanel'), mctip=document.getElementById('mctip'), mcpin=document.getElementById('mcpin');
+let INVT=null; // geladene Texturen
+const invTex=()=>INVT||(INVT=Promise.all(Object.keys(INVTEX).map(k=>new Promise(r=>{const i=new Image();i.onload=()=>r([k,i]);i.src=INVTEX[k];}))).then(Object.fromEntries));
+// 1 GUI-Pixel in Gerätepixeln (ganzzahlig → pixelgenau bei jedem Browser-Zoom)
+const invPx=()=>Math.max(1,Math.round((isM()?2:S.invScale)*(devicePixelRatio||1)));
+// Block als Inventar-Icon: isometrischer Würfel wie im Spiel (GUI-Drehung 30°/225°, Größe 0,625),
+// Flächenhelligkeit laut Minecraft Wiki: oben 100 %, links #CECECE (81 %), rechts #9E9E9E (62 %)
+function drawCube(ctx,px,top,left,right,size=16){
+  const e=size*.625*px, w=e*Math.SQRT2, h=w/2, H=e*Math.cos(Math.PI/6), cx=size/2*px, y0=(size*px-(h+H))/2, Lx=cx-w/2, Ly=y0+h/2, Bx=cx, By=y0+h;
+  ctx.imageSmoothingEnabled=false;
+  const face=(img,a,b,c,d,x,y,shade)=>{ctx.save();ctx.setTransform(a/16,b/16,c/16,d/16,x,y);ctx.drawImage(img,-.06,-.06,16.12,16.12); // minimal größer: keine Lücken an den Kanten
+    if(shade){ctx.fillStyle=`rgba(0,0,0,${shade})`;ctx.fillRect(-.06,-.06,16.12,16.12);}ctx.restore();};
+  face(top,w/2,-h/2,w/2,h/2,Lx,Ly,0);
+  face(left,w/2,h/2,0,H,Lx,Ly,1-206/255);
+  face(right,w/2,-h/2,0,H,Bx,By,1-158/255);
+}
+// Truhe (Platzhalter, bis der Blender-Render da ist): gleicher Würfel mit den Truhentexturen
+async function drawChest(){
+  const T=await invTex(), d=devicePixelRatio||1, css=isM()?120:168, px=Math.round(css/16*d), cv=document.getElementById('chestCv');
+  cv.width=cv.height=16*px; cv.style.width=cv.style.height=(16*px/d)+'px';
+  drawCube(cv.getContext('2d'),px,T.MWO_chest_top,T.MWO_chest_front,T.MWO_chest_side);
+}
+// Die ganze Truhe (Rahmen, Slots, Icons, Zahlen, Hervorhebung) ist EIN Canvas in Gerätepixeln → nichts kann beim Zoomen aus dem Raster rutschen
+let PX=0, ICON={}, hovF=-1, pinF=-1;
+async function buildInv(){
+  const px=invPx(), d=devicePixelRatio||1;
+  if(PX!==px){ PX=px; const T=await invTex(); await document.fonts.load('18px Monocraft');
+    ICON={}; FAM.forEach(f=>f.items.forEach(({id,tp,sd})=>{const c=document.createElement('canvas');c.width=c.height=16*px;drawCube(c.getContext('2d'),px,T[tp||id],T[sd||id],T[sd||id]);ICON[id]=c;})); }
+  const W=176, H=17+ROWS*18+7; cvP.width=W*px; cvP.height=H*px;
+  mcgui.style.width=(W*px/d)+'px'; mcgui.style.height=(H*px/d)+'px'; mcgui.style.setProperty('--u',px/d+'px');
+  drawInv();
+}
+function drawInv(){
+  const px=PX, c=cvP.getContext('2d'), W=176, H=17+ROWS*18+7;
+  const r=(col,x,y,w=1,h=1)=>{c.fillStyle=col;c.fillRect(x*px,y*px,w*px,h*px);};
+  const K='#000',L='#fff',G='#c6c6c6',D='#555';
+  c.clearRect(0,0,cvP.width,cvP.height); c.imageSmoothingEnabled=false;
+  // Rahmen wie die Vorlage: abgestufte Ecken, Licht oben/links, Schatten unten/rechts (je mit innerem Eckpixel)
+  r(G,1,1,W-2,H-2);
+  r(L,2,1,W-5,1); r(L,1,2,W-4,1); r(L,1,3,2,H-6); r(L,3,3);
+  r(D,W-3,3,2,H-5); r(D,3,H-3,W-5,2); r(D,W-4,H-4);
+  r(K,2,0,W-5,1); r(K,1,1); r(K,0,2,1,H-5); r(K,W-3,1); r(K,W-2,2); r(K,W-1,3,1,H-5);
+  r(K,1,H-3); r(K,2,H-2); r(K,3,H-1,W-5,1); r(K,W-2,H-2);
+  c.clearRect((W-2)*px,px,px,px); c.clearRect(px,(H-2)*px,px,px); // Eckpixel außerhalb des Umrisses (oben rechts, unten links) frei
+  const fp=Math.max(1,Math.round(px*.75)); // Pixelgröße der Stackzahl
+  c.font=`${9*fp}px Monocraft`; c.textAlign='right'; c.textBaseline='alphabetic';
+  for(let i=0;i<ROWS*9;i++){const x=7+(i%9)*18, y=17+Math.floor(i/9)*18, s=SLOTS[i];
+    // Slot: dunkel oben/links, hell unten/rechts, Eckpixel grau
+    r('#8b8b8b',x,y,18,18); r('#373737',x,y,17,1); r('#373737',x,y,1,17); r(L,x+1,y+17,17,1); r(L,x+17,y+1,1,17);
+    if(!s)continue;
+    c.drawImage(ICON[s.it.id],(x+1)*px,(y+1)*px);
+    if(s.f===hovF||s.f===pinF){c.fillStyle='rgba(255,255,255,.5)';c.fillRect((x+1)*px,(y+1)*px,16*px,16*px);}
+    if(s.k>1){const tx=(x+17)*px-fp, ty=(y+17)*px-fp; c.fillStyle='#3f3f3f';c.fillText(s.k,tx+fp,ty+fp); c.fillStyle='#fff';c.fillText(s.k,tx,ty);}
+  }
+}
+// Position → Slot
+function slotAt(e){const b=cvP.getBoundingClientRect(), gx=(e.clientX-b.left)/b.width*176, gy=(e.clientY-b.top)/b.height*(17+ROWS*18+7);
+  const col=Math.floor((gx-7)/18), row=Math.floor((gy-17)/18); if(col<0||col>8||row<0||row>=ROWS)return -1; const i=row*9+col; return SLOTS[i]?i:-1;}
+// Info im Minecraft-Stil: Name, dann Blöcke / Stacks / Anteil untereinander; bei Erzen die Aufteilung normal + Deepslate
+const tipHTML=fi=>{const f=FAM[fi], st=f.items.reduce((s,it)=>s+Math.ceil(it.cnt/64),0);
+  const split=f.items.length>1?`<i class="dim">${f.items.map(it=>`${fmtN(it.cnt)} ${it.name.startsWith('Deepslate')?'deepslate':'stone'}`).join(' + ')}</i>`:'';
+  return `${f.name}<i>${fmtN(f.total)} blocks</i><i>${st} stack${st>1?'s':''}</i><i>${pctS(f.total)} of the chest</i>${split}`;};
+const canHover=matchMedia('(hover: hover) and (pointer: fine)');
+function setHov(fi){if(fi!==hovF){hovF=fi;drawInv();}}
+function showTip(fi,x,y){mctip.innerHTML=tipHTML(fi);
+  const r=mctip.getBoundingClientRect(); mctip.style.left=Math.round(Math.min(x+16,innerWidth-r.width-8))+'px'; mctip.style.top=Math.round(Math.max(8,y-r.height-8))+'px'; mctip.style.opacity=1;}
+function hideTip(){mctip.style.opacity=0;setHov(-1);}
+cvP.addEventListener('mousemove',e=>{if(!canHover.matches)return;const i=slotAt(e);cvP.style.cursor=i<0?'':'pointer';if(i<0){hideTip();return;}setHov(SLOTS[i].f);showTip(SLOTS[i].f,e.clientX,e.clientY);});
+cvP.addEventListener('mouseleave',hideTip);
+// Klick/Tippen: Info bleibt stehen – Desktop rechts neben der Truhe, mobil über (oder unter) der Reihe
+function pin(fi,i){pinF=fi; mcpin.classList.toggle('on',fi>=0); drawInv(); if(fi<0)return;
+  mcpin.innerHTML=tipHTML(fi); const u=PX/(devicePixelRatio||1), row=Math.floor(i/9), y=mcgui.offsetTop+(17+row*18)*u;
+  if(!isM()){mcpin.style.top=(y+9*u)+'px';return;}
+  const vy=cvP.getBoundingClientRect().top+(17+row*18)*u, above=vy-mcpin.offsetHeight-8>8;
+  mcpin.style.top=(above?y-mcpin.offsetHeight-8:y+18*u+8)+'px';}
+cvP.addEventListener('click',e=>{const i=slotAt(e), fi=i<0?-1:SLOTS[i].f; pin(fi===pinF?-1:fi,i); if(canHover.matches){mctip.style.opacity=0;}});
+document.addEventListener('click',e=>{if(pinF>=0&&e.target!==cvP)pin(-1);});
+addEventListener('scroll',()=>{if(mctip.style.opacity==='1')hideTip();},{passive:true});
+// Für Screenreader: Inhalt als Liste
+document.getElementById('invList').innerHTML=FAM.map(f=>`<li>${f.name}: ${fmtN(f.total)} blocks (${pctS(f.total)})</li>`).join('');
+// Öffnen / Schließen
+async function openChest(){
+  await buildInv(); chestSec.classList.add('open');
+  requestAnimationFrame(()=>{chestSec.classList.add('shown'); scrollTo({top:document.getElementById('invWrap').getBoundingClientRect().top+scrollY-innerHeight*.08,behavior:'smooth'});});
+}
+function closeChest(){chestSec.classList.remove('shown','open');hideTip();pin(-1);}
+document.getElementById('chestBtn').addEventListener('click',openChest);
+addEventListener('keydown',e=>{if(!chestSec.classList.contains('open')||/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)||e.target.isContentEditable)return;
+  if(e.key==='Escape'||e.key==='e'||e.key==='E')closeChest();});
+// bei Tweaks / Größenänderung / Browser-Zoom neu zeichnen
+function invApply(){drawChest(); if(chestSec.classList.contains('open'))buildInv();}
+addEventListener('resize',invApply);
+matchMedia(`(resolution: ${devicePixelRatio}dppx)`).addEventListener('change',invApply);
+
 /* ================= Loop ================= */
 let ticking=false;
 function onScroll(){if(ticking)return;ticking=true;requestAnimationFrame(()=>{onSeq();ticking=false;});}
