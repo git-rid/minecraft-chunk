@@ -29,7 +29,7 @@ p{font-size:17px;line-height:1.55;color:var(--muted)}
 #seq{position:relative}
 .stage{position:sticky;top:0;height:100vh;overflow:hidden}
 #cv{position:absolute;inset:0;width:100%;height:100%}
-.hero{position:absolute;left:0;right:0;top:12vh;text-align:center;pointer-events:none}
+.hero{position:absolute;left:0;right:0;top:12vh;text-align:center;pointer-events:none;display:none} /* Titel vorerst weggelassen (25.11.) */
 .hero .kicker{margin-bottom:18px}
 .hint{position:absolute;left:50%;bottom:5vh;transform:translateX(-50%);font-family:var(--label);font-size:13px;color:var(--muted)}
 .card{position:absolute;left:6vw;top:50%;transform:translateY(-50%);width:min(380px,30vw);opacity:0;pointer-events:none;will-change:opacity,transform}
@@ -38,10 +38,8 @@ p{font-size:17px;line-height:1.55;color:var(--muted)}
 .layers{position:absolute;right:6vw;top:50%;list-style:none;font-family:var(--label);font-size:calc(14px*var(--label-size));opacity:0;transition:opacity .4s}
 .layers li{display:flex;align-items:center;gap:10px;padding:6px 0;color:var(--muted);opacity:.45;transition:opacity .25s,color .25s}
 .layers li.on{opacity:1;color:var(--fg)}
-#ym{position:absolute;left:0;top:0;pointer-events:none;opacity:0;transition:opacity .3s}
-#ym .tick{position:absolute;right:0;top:-1px;width:22px;height:2px;background:var(--fg)}
-#ym .val{position:absolute;right:30px;bottom:-14px;font-family:var(--label);font-size:calc(22px*var(--label-size));white-space:nowrap;color:var(--fg);text-align:right;line-height:1}
-#ym .val small{display:block;font-size:.5em;color:var(--muted);margin-bottom:4px}
+#seq .layers{display:none} /* ersetzt durch die Y-Achse */
+#yax{left:0;top:0;bottom:auto;opacity:0;transition:opacity .3s;will-change:transform}
 .loader{position:fixed;left:16px;bottom:14px;font-family:var(--label);font-size:12px;color:var(--muted);z-index:20}
 
 /* ---------- Text-Pausen ---------- */
@@ -53,6 +51,10 @@ p{font-size:17px;line-height:1.55;color:var(--muted)}
 .xhead{text-align:center;padding:0 8vw 8vh}
 .xhead p{max-width:640px;margin:18px auto 0}
 .xgrid{display:grid;grid-template-columns:minmax(300px,1fr) auto minmax(240px,1fr);gap:3vw;padding:0 4vw;align-items:start}
+/* Chunk in Xray genauso breit und an derselben x-Position wie in Teil 2 (layoutXray): Filter + Info links, rechts frei */
+.xgrid.same{gap:0;padding:0}
+.xleft{position:sticky;top:6vh;display:flex;flex-direction:column;gap:20px;padding:0 134px 0 4vw;min-width:0}
+.xleft .panel{position:static}
 .panel{position:sticky;top:6vh;display:flex;flex-direction:column;gap:20px;min-width:0}
 .chips{display:flex;flex-wrap:wrap;gap:6px;max-width:300px}
 .chip{border:0px solid var(--line);background:var(--chip);color:var(--fg);font-family:var(--label);font-size:calc(13px*var(--label-size));padding:6px 10px;cursor:pointer;display:flex;align-items:center;gap:7px}
@@ -77,7 +79,7 @@ p{font-size:17px;line-height:1.55;color:var(--muted)}
 .col img.grp.on{opacity:1}
 .axis{position:absolute;top:0;bottom:0;left:-110px;width:94px;pointer-events:none}
 .axis .t{position:absolute;right:16px;transform:translateY(-50%);font-family:var(--label);font-size:calc(12px*var(--label-size));color:var(--muted)}
-.axis .t::after{content:"";position:absolute;right:-12px;top:50%;width:8px;border-top:1px solid var(--muted)}
+.axis .t::after{content:"";position:absolute;right:-10px;top:50%;width:3px;height:3px;margin-top:-1px;background:var(--muted)} /* Marke als kleines Quadrat (Strich sah wie ein Minus aus: „-56-“) */
 .band{position:absolute;left:22px;width:8px}
 .band span{position:absolute;right:14px;top:50%;white-space:nowrap;font-family:var(--label);font-size:calc(12px*var(--label-size));letter-spacing:.06em;text-transform:uppercase;writing-mode:vertical-rl;transform:translateY(-50%) rotate(180deg);color:var(--muted)}
 
@@ -89,10 +91,7 @@ html.editing .hero{pointer-events:auto}
 html.editing [data-t]{outline:1px dashed var(--muted);outline-offset:3px;cursor:text}
 /* Minecraft-Font: 1 Font-Pixel = 1/16 em → nur 16/32 px sind scharf */
 /* --mc-s / --mc-l werden per JS aus devicePixelRatio berechnet: 1 Font-Pixel = ganze Gerätepixel */
-html.mcfont .kicker,html.mcfont .hint,html.mcfont .layers,html.mcfont .chip,html.mcfont .info dl,html.mcfont .info dt,html.mcfont .axis .t,html.mcfont .band span,html.mcfont .tip,html.mcfont .loader,html.mcfont #ym .val small{font-size:var(--mc-s,16px);letter-spacing:0;-webkit-font-smoothing:none;text-rendering:optimizeSpeed}
-html.mcfont #ym .val{font-size:var(--mc-l,32px);-webkit-font-smoothing:none}
-html.mcfont #ym .tick{height:var(--mc-px,4px);top:0;width:calc(var(--mc-px,4px)*5)}
-html.mcfont #ym .val{right:calc(var(--mc-px,4px)*6);bottom:calc(var(--mc-px,4px)*-4)}
+html.mcfont .kicker,html.mcfont .hint,html.mcfont .layers,html.mcfont .chip,html.mcfont .info dl,html.mcfont .info dt,html.mcfont .axis .t,html.mcfont .band span,html.mcfont .tip,html.mcfont .loader{font-size:var(--mc-s,16px);letter-spacing:0;-webkit-font-smoothing:none;text-rendering:optimizeSpeed}
 html.mcfont .info dt{margin-top:12px}
 html.mcfont .spark text{font-family:var(--sans);font-size:10px}
 .kicker:empty{display:none}
@@ -100,28 +99,34 @@ html.editing .kicker:empty{display:block;min-height:1em;min-width:4em}
 .placeholder{border:1px dashed var(--line);margin:0 8vw 20vh;min-height:60vh;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;text-align:center}
 
 /* ---------- Teil 4: Truhe / Inventar (Minecraft-Truhen-GUI nachgebaut; --u = 1 GUI-Pixel, per JS auf ganze Gerätepixel gerundet) ---------- */
-#chest{position:relative;padding:2vh 4vw 22vh;display:flex;flex-direction:column;align-items:center}
+#chest{position:relative;padding:2vh 4vw 22vh;display:grid;justify-items:center}
+#chest>.chestStage,#chest>.invWrap{grid-area:1/1} /* Inventar liegt über der (offenen) Truhe, wie im Spiel */
 .chestStage{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;min-height:62vh}
 .chestBtn{background:none;border:0;padding:0;cursor:pointer;transition:transform .2s ease}
-.chestBtn:hover{transform:translateY(-6px)}
+#chest:not(.open) .chestBtn:hover{transform:translateY(-6px)}
 .chestBtn canvas{display:block}
-.invWrap{position:relative;display:none;opacity:0;transform:translateY(14px);transition:opacity .35s ease,transform .35s ease}
-#chest.open .chestStage{display:none}
+.invWrap{position:relative;z-index:2;align-self:start;display:none;opacity:0;transform:translateY(14px);transition:opacity .35s ease,transform .35s ease}
+.invFoot{display:block;margin:22px auto 0;background:none;border:0;cursor:pointer}
+.invFoot .ft-m{display:none}
+html.m .invFoot .ft-d{display:none}
+html.m .invFoot .ft-m{display:inline}
 #chest.open .invWrap{display:block}
 #chest.shown .invWrap{opacity:1;transform:none}
 .mcgui{--u:3px;position:relative}
 .mcgui>canvas{position:absolute;left:0;top:0;width:100%;height:100%}
 .mctitle{position:absolute;left:calc(var(--u)*8);top:calc(var(--u)*5);font-family:"Monocraft",monospace;font-size:calc(var(--u)*9);line-height:1;color:#404040;-webkit-font-smoothing:none;white-space:nowrap;pointer-events:none}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
-.invFoot{margin-top:22px;text-align:center}
-.mctip{position:fixed;z-index:32;pointer-events:none;opacity:0;background:rgba(16,0,16,.94);border:2px solid;border-image:linear-gradient(#5000ff,#28007f) 1;box-shadow:0 0 0 2px rgba(16,0,16,.94);
-  padding:6px 9px;font-family:"Monocraft",monospace;font-size:var(--mc-s,18px);line-height:1.4;color:#fff;white-space:nowrap;-webkit-font-smoothing:none}
-.mctip i{display:block;font-style:normal;color:#aaa}
-.mctip i.dim{color:#6f6f6f}
+/* Tooltip wie im Spiel (--t = 1 GUI-Pixel wie das Inventar): Fläche #100010 mit abgeschnittenen Ecken, 1 px innen Rahmen (#5000FF→#28007F bei 31 %), Schrift mit Schatten (¼ Helligkeit) */
+.mctip{--t:var(--mcu,3px);position:fixed;z-index:32;pointer-events:none;opacity:0;background:rgba(16,0,16,.94);
+  clip-path:polygon(var(--t) 0,calc(100% - var(--t)) 0,calc(100% - var(--t)) var(--t),100% var(--t),100% calc(100% - var(--t)),calc(100% - var(--t)) calc(100% - var(--t)),calc(100% - var(--t)) 100%,var(--t) 100%,var(--t) calc(100% - var(--t)),0 calc(100% - var(--t)),0 var(--t),var(--t) var(--t));
+  padding:calc(var(--t)*3) calc(var(--t)*3) calc(var(--t)*3) calc(var(--t)*4);font-family:"Monocraft",monospace;font-size:calc(var(--t)*9);line-height:calc(var(--t)*10);color:#fff;text-shadow:var(--t) var(--t) 0 #3f3f3f;white-space:nowrap;-webkit-font-smoothing:none}
+.mctip::before{content:'';position:absolute;inset:var(--t);border:var(--t) solid;border-image:linear-gradient(#24005a,#170032) 1;pointer-events:none}
+.mctip i{display:block;font-style:normal;color:#aaa;text-shadow:var(--t) var(--t) 0 #2a2a2a}
+.mctip i:first-of-type{margin-top:calc(var(--t)*2)}
+.mctip i.dim{color:#6f6f6f;text-shadow:var(--t) var(--t) 0 #1b1b1b}
 .mcpin{position:absolute;left:calc(100% + 16px);transform:translateY(-50%);pointer-events:none;opacity:0;transition:opacity .2s}
 .mcpin.on{opacity:1}
 html.m .mcpin{left:0;right:0;transform:none;white-space:normal;z-index:33}
-html.m .invFoot{display:none}
 
 /* ---------- Tweaks-Panel ---------- */
 #twBtn{position:fixed;right:16px;bottom:16px;z-index:50;font:600 12px var(--sans);padding:9px 13px;border:1px solid var(--line);background:var(--panel);color:var(--fg);cursor:pointer;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.12)}
@@ -154,6 +159,7 @@ html.m .pause{padding:10vh 20px}
 html.m .pause p{font-size:16px}
 html.m .xhead{padding:0 20px 5vh}
 html.m .xgrid{display:flex;flex-direction:column;align-items:stretch;padding:0 12px}
+html.m .xleft{display:contents}
 html.m #chipPanel{order:-1}
 html.m #chipPanel{position:sticky;top:0;z-index:30;background:var(--bg);margin:0 -12px 12px;padding:10px 12px}
 html.m .chips{min-width:0;width:100%;flex-wrap:nowrap;overflow-x:auto;max-width:none;scrollbar-width:none;-webkit-overflow-scrolling:touch;touch-action:pan-x;cursor:grab;overscroll-behavior-x:contain}
@@ -163,6 +169,7 @@ html.m .chipsep{display:none}
 html.m .col{width:calc(100vw - 24px - 60px);margin-left:60px}
 html.m .axis{left:-58px;width:54px}
 html.m .axis .t{right:6px}
+html.m #yax{width:54px}
 html.m .band{left:0;width:6px}
 html.m .band span{display:none}
 html.m .tip{display:none}
@@ -173,6 +180,7 @@ html.m .info h3{font-size:22px;margin:4px 0 8px}
 html.m .spark{width:70px;height:150px}
 html.m .placeholder{margin:0 20px 12vh;min-height:40vh}
 html.m #chest{padding:2vh 12px 12vh}
+html.m .card{background:var(--bg);padding:6px 20px 10px;left:0;right:0} /* verdeckt die Y-Achse hinter dem Text (volle Breite, sonst ragen die Achsenzahlen links heraus) */
 html.m #tw{left:12px;right:12px;width:auto;bottom:60px}
 </style>
 </head>
@@ -190,7 +198,7 @@ html.m #tw{left:12px;right:12px;width:auto;bottom:60px}
 
     <div class="card" data-key="intro">
       <div class="kicker" data-t="intro.k"></div>
-      <h2 data-t="intro.h">the world is made of chunks</h2>
+      <h2 data-t="intro.h">The World is made of Chunks</h2>
       <p data-t="intro.p">Minecraft loads its world in chunks: 16x16 block columns reaching from a height of Y −64 up to Y 319. This one holds 32,383 blocks, not counting air. What lies beneath the surface? Let’s take it apart, layer by layer.</p>
     </div>
     <div class="card" data-key="dirt">
@@ -214,7 +222,7 @@ html.m #tw{left:12px;right:12px;width:auto;bottom:60px}
       <p data-t="bedrock.p">The floor of the world. Unbreakable, with a ragged pattern that thins out toward Y −60.</p>
     </div>
 
-    <div id="ym"><div class="tick"></div><div class="val"></div></div>
+    <div class="axis" id="yax"></div> <!-- Y-Achse Teil 2 (wie im Xray-Teil), läuft mit der Kamera -->
 
     <ul class="layers" id="layers">
       <li><span class="sw" style="background:#6aa84f"></span>Surface</li>
@@ -230,37 +238,39 @@ html.m #tw{left:12px;right:12px;width:auto;bottom:60px}
 <section id="xray">
   <div class="xhead">
     <div class="kicker" data-t="xray.k"></div>
-    <h2 data-t="xray.h">hidden in the depths</h2>
-    <p data-t="xray.p">Select a group to highlight it. Click a filter to jump to where it is densest.</p>
+    <h2 data-t="xray.h">Hidden in the Depths</h2>
+    <p data-t="xray.p">Find out which minerals can be found underground.<br>Select a group to highlight it. Click a filter to jump to where it is densest.</p>
   </div>
   <div class="xgrid">
+    <div class="xleft">
+    <aside class="panel" id="chipPanel">
+      <div class="chips" id="chips"></div>
+    </aside>
     <aside class="panel" id="infoPanel">
       <div class="info" id="info"></div>
     </aside>
+    </div>
     <div class="col" id="col">
       <img class="bg" data-bg="surface" data-f="surface.webp" alt="">
       <img class="bg" data-bg="full" data-f="chunk_full.webp" alt="">
       <img class="main" data-f="main.webp" width="1532" height="7541" alt="X-ray view of the chunk">
       <div class="axis" id="axis"></div>
     </div>
-    <aside class="panel" id="chipPanel">
-      <div class="chips" id="chips"></div>
-    </aside>
   </div>
 </section>
 
 <!-- ============ 6: Pause ============ -->
 <section class="pause">
   <div class="kicker" data-t="tally.k"></div>
-  <h2 data-t="tally.h">32,383 blocks. How common is each one?</h2>
-  <p data-t="tally.p">Every block we dug out went straight into a chest, mined with Silk Touch, so each one dropped itself. Only bedrock, water and lava stayed behind.</p>
+  <h2 data-t="tally.h">31,390 blocks. How common is each one?</h2>
+  <p data-t="tally.p">Every mineable block beneath the surface we dug out went straight into a chest, mined with Silk Touch, so each one dropped itself.</p>
 </section>
 
 <!-- ============ 7: Teil 4 – Truhe / Inventar ============ -->
 <section id="chest">
   <div class="chestStage">
-    <button class="chestBtn" id="chestBtn" aria-label="Open the chest"><canvas id="chestCv"></canvas></button> <!-- Platzhalter: wird durch Blender-Render der Truhe ersetzt -->
-    <div class="kicker" data-t="chest.hint">click to open</div>
+    <button class="chestBtn" id="chestBtn" aria-label="Open the chest" aria-expanded="false"><canvas id="chestCv"></canvas></button> <!-- Blender-Render: chest/chest_open.webp (11 Frames Öffnen; Schließen = rückwärts) -->
+    <div class="kicker" data-t="chest.hint">CLICK TO OPEN</div>
   </div>
   <div class="invWrap" id="invWrap">
     <div class="mcgui" id="mcgui"><canvas id="mcpanel" aria-hidden="true"></canvas>
@@ -268,7 +278,7 @@ html.m #tw{left:12px;right:12px;width:auto;bottom:60px}
       <ul class="sr-only" id="invList" aria-label="Chest contents"></ul>
     </div>
     <div class="mctip mcpin" id="mcpin"></div>
-    <div class="kicker invFoot" data-t="chest.foot">esc to close</div>
+    <button class="kicker invFoot" id="invFoot"><span class="ft-d" data-t="chest.foot">press E or esc to close</span><span class="ft-m" data-t="chest.footM">tap here to close</span></button>
   </div>
 </section>
 <div class="mctip" id="mctip"></div>
@@ -286,11 +296,14 @@ html.m #tw{left:12px;right:12px;width:auto;bottom:60px}
   <label>Swatch radius<input type="range" data-k="swR" min="0" max="5" step="1"><output></output></label>
   <label>Swatch outline<input type="range" data-k="swO" min="0" max="2" step="1"><output></output></label>
   <h4>Scroll length (vh)</h4>
+  <label class="sel">Drops<select data-k="drops"><option value="off">Off</option><option value="quarter">On</option></select></label>
+  <label class="sel">Part 1<select data-k="p1auto"><option value="scroll">Scroll</option><option value="auto">Autoplay on load</option></select></label>
+  <label>Autoplay s<input type="range" data-k="p1dur" min="1.5" max="8" step="0.5"><output></output></label>
+  <label>Title hold<input type="range" data-k="p1pre" min="10" max="120" step="5"><output></output></label>
   <label>Build-up<input type="range" data-k="build" min="40" max="300" step="10"><output></output></label>
   <label>Intro stop<input type="range" data-k="intro" min="30" max="200" step="10"><output></output></label>
-  <label>Per layer<input type="range" data-k="trans" min="20" max="150" step="5"><output></output></label>
+  <label>Per 32 levels<input type="range" data-k="trans" min="20" max="150" step="5"><output></output></label>
   <label>Layer stop<input type="range" data-k="stop" min="20" max="150" step="5"><output></output></label>
-  <label>Bedrock out<input type="range" data-k="outro" min="20" max="150" step="5"><output></output></label>
   <label>Text fade<input type="range" data-k="fadeLen" min="5" max="25" step="1"><output></output></label>
   <label>Gap to X-ray<input type="range" data-k="gap" min="0" max="40" step="1"><output></output></label>
   <h4>Sequence frame</h4>
@@ -316,12 +329,12 @@ html.m #tw{left:12px;right:12px;width:auto;bottom:60px}
 </div>
 
 <script src="idmap.js"></script>
-<script src="ymeter.js"></script>
+<script src="yaxis.js"></script>
 <script src="invtex.js"></script>
 <script>
 /* ================= Tweaks ================= */
-const DEF={theme:'light',labelFont:'Monocraft',labelSize:0.8,swR:0,swO:0,build:200,intro:80,trans:80,stop:80,outro:30,gap:0,fadeLen:10,fit:'flush',scale:100,fade:10,s2:70,s2gap:80,xbg:'full',xbgOp:40,rest:35,xdur:400,layout:'auto',imgset:'auto',invScale:3};
-const VER='v7'; // neue Standardwerte → alte gespeicherte Tweaks verwerfen
+const DEF={theme:'auto',labelFont:'Monocraft',labelSize:0.8,swR:0,swO:0,build:200,intro:80,trans:80,stop:80,outro:30,gap:0,fadeLen:10,fit:'flush',scale:100,fade:10,s2:65,s2gap:40,xbg:'full',xbgOp:40,rest:35,xdur:400,layout:'auto',imgset:'auto',invScale:3,p1auto:'auto',p1dur:3,p1pre:40,drops:'quarter'};
+const VER='v9'; // neue Standardwerte → alte gespeicherte Tweaks verwerfen
 let S={...DEF}; try{const o=JSON.parse(localStorage.getItem('chunkTweaks')||'{}');if(o._v===VER)Object.assign(S,o)}catch(e){}
 const tw=document.getElementById('tw');
 document.getElementById('twBtn').onclick=()=>tw.classList.toggle('open');
@@ -330,7 +343,7 @@ tw.querySelectorAll('[data-k]').forEach(el=>{
   const k=el.dataset.k, out=el.parentElement.querySelector('output');
   el.value=S[k]; if(out)out.textContent=S[k];
   el.addEventListener('input',()=>{S[k]=el.type==='range'?+el.value:el.value;if(out)out.textContent=S[k];applyTweaks();
-    if(k==='imgset')location.reload(); /* Bildsatz wird beim Laden gewählt */});
+    if(k==='imgset'||k==='p1auto'||k==='drops')location.reload(); /* Bildsatz wird beim Laden gewählt */});
 });
 document.getElementById('twReset').onclick=()=>{S={...DEF};tw.querySelectorAll('[data-k]').forEach(el=>{el.value=S[el.dataset.k];const o=el.parentElement.querySelector('output');if(o)o.textContent=S[el.dataset.k]});applyTweaks();};
 document.getElementById('twCopy').onclick=async()=>{const t=JSON.stringify(S);const ta=document.getElementById('twOut');ta.value=t;try{await navigator.clipboard.writeText(t);document.getElementById('twCopy').textContent='Copied ✓';setTimeout(()=>document.getElementById('twCopy').textContent='Copy settings',1500)}catch(e){ta.style.display='block';ta.select();}};
@@ -374,36 +387,58 @@ function applyTweaks(){
   r.style.setProperty('--sw-r',S.swR+'px'); r.style.setProperty('--sw-o',S.swO+'px');
   r.style.setProperty('--gap',S.gap+'vh');
   try{localStorage.setItem('chunkTweaks',JSON.stringify({...S,_v:VER}))}catch(e){}
-  buildSegs(); draw(); onScroll(); renderX();
+  buildSegs(); draw(); layoutXray(); onScroll(); renderX();
 }
 
 /* ================= Sequence ================= */
 // 240 Frames in 24 Sprite-Sheets à 10 Frames, 20 px Abstand (verhindert Farbstreifen am Rand)
 // Bildsatz: auf Handys (oder bei „Datensparen“) halbe Auflösung – ca. 8,5 statt 16 MB
+// Teil 2 linear (seit 25.11.): ganze Lagen auf einmal, 1 Frame pro Lage, Kamera folgt der Oberkante. Frames und Stopps in yaxis.js
+const YA=YAXIS;
 const SMALL=S.imgset==='small'||(S.imgset==='auto'&&(Math.min(screen.width,screen.height)<600||(navigator.connection&&navigator.connection.saveData)));
 const FW=SMALL?640:960, FH=SMALL?360:540, STRIDE=SMALL?380:560, SHEETS=SMALL?'sheets_m':'sheets', XDIR=SMALL?'xray_m':'xray';
-const N=240, PER=10, sheets=[]; let loaded=0;
+const N=YA.oldEnd, PER=10, NS=Math.ceil(N/PER), sheets=[]; let loaded=0;
+// Frame f (Blender-Timeline) → Bild in den Sprite-Sheets: Pausen und Vorlauf sind Standbilder vorhandener Frames (YAXIS.fmap)
+const FM=f=>f<=YA.start?f:YA.fmap[Math.min(f,YA.end)-YA.start];
 const loader=document.getElementById('loader');
-for(let s=0;s<N/PER;s++){const im=new Image();im.onload=()=>{im.ok=true;loaded++;loader.textContent=loaded<N/PER?`Loading ${loaded}/${N/PER}`:'';draw();};im.src=`${SHEETS}/s${String(s).padStart(2,'0')}.webp`;sheets[s]=im;}
+for(let s=0;s<NS;s++){const im=new Image();im.onload=()=>{im.ok=true;loaded++;loader.textContent=loaded<NS?`Loading ${loaded}/${NS}`:'';draw();apTry();};im.src=`${SHEETS}/s${String(s).padStart(2,'0')}.webp`;sheets[s]=im;}
 document.querySelectorAll('img[data-f]').forEach(im=>im.src=`${XDIR}/${im.dataset.f}`);
-const frameOk=i=>sheets[Math.floor((i-1)/PER)].ok;
+const frameOk=i=>sheets[Math.floor((FM(i)-1)/PER)].ok;
 
 let SEGS=[], TOTAL=0, HOLDS=[];
+// Overlay mit fliegenden Blöcken + Truhe (Frames 71–Ende, Blender-Timeline), transparent über der Sequenz; Tweak „Drops“
+const DROPS=S.drops==='off'?null:'drops'+(SMALL?'_m':''), DR=[71,YA.end], dsheets=[];
+if(DROPS)for(let s=Math.floor((DR[0]-1)/PER);s<=Math.floor((DR[1]-1)/PER);s++){const im=new Image();im.onload=()=>{im.ok=true;draw();};im.src=`${DROPS}/s${String(s).padStart(2,'0')}.webp`;dsheets[s]=im;}
+// Test: Teil 1 als Autoplay (Tweak „Part 1“). Startet, sobald Frames 1–70 geladen sind und die Seite oben steht; Scrollen überspringt; reduzierte Bewegung → Endbild
+const AUTO=S.p1auto==='auto', AP={state:AUTO?'wait':'off',f:1,t0:0,tDone:-1e9}, INTRO_MS=700; // nach dem Autoplay: Intro-Text + Bildwechsel zeitgesteuert (INTRO_MS)
+function apTry(){
+  if(AP.state!=='wait')return; for(let s=0;s<7;s++)if(!sheets[s]||!sheets[s].ok)return;
+  if(scrollY>10||matchMedia('(prefers-reduced-motion: reduce)').matches){AP.state='done';AP.f=70;AP.tDone=-1e9;onSeq();return;}
+  AP.state='play'; AP.t0=performance.now(); requestAnimationFrame(apTick);
+}
+function apTick(ts){
+  if(AP.state!=='play')return; const p=(ts-AP.t0)/(S.p1dur*1000);
+  AP.f=Math.min(70,1+Math.floor(p*70)); if(p>=1){AP.state='done';AP.f=70;AP.tDone=performance.now();}
+  onSeq(); if(AP.state==='play')requestAnimationFrame(apTick);
+}
 const seq=document.getElementById('seq');
 function buildSegs(){
+  // Stopps aus yaxis.js = Haltebilder (Ende der Pause, alle Drops gelandet); Scrolllänge proportional zu den Frames: S.trans pro 32 Frames
+  const st=YA.stops, rm=YA.rem, P=(a,b)=>(b-a)*S.trans/32;
   SEGS=[
-    {f:[1,70],len:S.build},
+    AUTO?{hold:70,len:0}:{f:[1,70],len:S.build},   // Autoplay: Teil 1 läuft beim Laden ab, danach steht sofort der Intro-Text (ohne Titel)
     {hold:70,len:S.intro,card:'intro'},
-    {f:[70,103],len:S.trans},
-    {hold:103,len:S.stop,card:'dirt'},
-    {f:[105,137],len:S.trans},
-    {hold:137,len:S.stop,card:'stone'},
-    {f:[139,171],len:S.trans},
-    {hold:171,len:S.stop,card:'deepslate'},
-    {f:[173,205],len:S.trans},
-    {hold:205,len:S.stop,card:'bedrock'},
-    {f:[207,240],len:S.outro},
-    {hold:240,len:15},            // leere Bühne, bevor weitergescrollt wird
+    // Scrollen bis die letzte Lage weg ist (rem); die restlichen Frames bis zum Stopp (Drops landen) laufen von selbst ab (auto)
+    {f:[70,rm.dirt],len:P(70,rm.dirt)},
+    {hold:st.dirt,auto:[rm.dirt,st.dirt],len:S.stop,card:'dirt'},
+    {f:[st.dirt,rm.stone],len:P(st.dirt,rm.stone)},
+    {hold:st.stone,auto:[rm.stone,st.stone],len:S.stop,card:'stone'},
+    {f:[st.stone,rm.deepslate],len:P(st.stone,rm.deepslate)},
+    {hold:st.deepslate,auto:[rm.deepslate,st.deepslate],len:S.stop,card:'deepslate'},
+    {f:[st.deepslate,rm.bedrock],len:P(st.deepslate,rm.bedrock)},
+    {hold:st.bedrock,auto:[rm.bedrock,st.bedrock],len:S.stop,card:'bedrock'},
+    {f:[st.bedrock,rm.end],len:P(st.bedrock,rm.end)},
+    {hold:YA.end,auto:[rm.end,YA.end],len:15},   // Bedrock weg → Truhe schließt und verschwindet von selbst            // leere Bühne, bevor weitergescrollt wird
   ];
   let acc=0; HOLDS=[];
   SEGS.forEach((s,i)=>{s.a=acc;acc+=s.len;s.b=acc;if(s.card)HOLDS.push(s);});
@@ -414,12 +449,18 @@ const cv=document.getElementById('cv'), ctx=cv.getContext('2d');
 const cards={}; document.querySelectorAll('.card').forEach(c=>cards[c.dataset.key]=c);
 const hero=document.getElementById('hero'), hint=document.getElementById('hint');
 const layersEl=document.getElementById('layers'), layerLis=[...layersEl.children];
-const ym=document.getElementById('ym'), ymVal=ym.querySelector('.val');
+// Y-Achse Teil 2: gleiche Ticks und Schichtbänder wie im Xray-Teil, Position pro Frame aus yaxis.js
+const yax=document.getElementById('yax'), YT=72, YR=136; // Achse von Y -64 bis 72
+(()=>{const pc=y=>((YT-y)/YR*100)+'%';
+  for(let y=-64;y<=72;y+=8){const d=document.createElement('div');d.className='t';d.style.top=pc(y);d.textContent=y;yax.appendChild(d);}
+  [[-64,-60,'#3a3a3a','Bedrock'],[-60,0,'#4b4f5a','Deepslate'],[0,8,'linear-gradient(#8d8f92,#4b4f5a)',''],[8,58,'#8d8f92','Stone'],[58,68,'#8b5d3b','Dirt']].forEach(([a,b,c,l])=>{
+    const d=document.createElement('div');d.className='band';d.style.top=`calc(${pc(b)} + 4px)`;d.style.height=`calc(${(b-a)/YR*100}% - 8px)`;d.style.background=c;
+    if(l)d.innerHTML=`<span>${l}</span>`;yax.appendChild(d);});})();
 let cur=1, shift=0, segI=0, rect=null;
 
 const stage=document.querySelector('.stage');
 let SW=innerWidth, SH=innerHeight;
-function resize(){const d=devicePixelRatio||1;SW=stage.clientWidth;SH=stage.clientHeight;cv.width=Math.round(SW*d);cv.height=Math.round(SH*d);draw();}
+function resize(){const d=devicePixelRatio||1;SW=stage.clientWidth;SH=stage.clientHeight;cv.width=Math.round(SW*d);cv.height=Math.round(SH*d);draw();layoutXray();}
 // Mobil: Breite/Mitte des sichtbaren Inhalts in Frame 1–70 (Anteil der Framebreite, geglättet) – gleicht das Hereinzoomen der Kamera aus
 const BOXW=[0.079,0.088,0.095,0.100,0.112,0.124,0.128,0.131,0.133,0.135,0.136,0.139,0.141,0.144,0.146,0.149,0.151,0.155,0.164,0.178,0.196,0.220,0.250,0.287,0.327,0.368,0.409,0.450,0.490,0.528,0.562,0.594,0.621,0.644,0.664,0.681,0.694,0.704,0.712,0.719,0.723,0.727,0.729,0.731,0.731,0.732,0.733,0.733,0.733,0.734,0.734,0.734,0.734,0.734,0.734,0.734,0.734,0.734,0.734,0.734,0.734,0.734,0.734,0.734,0.734,0.734,0.734,0.734,0.734,0.734],BOXC=[0.490,0.492,0.493,0.494,0.496,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499,0.499];
 const MG_L=64, MG_R=14; // fester Rand links für den Tiefenmeter
@@ -432,50 +473,77 @@ function rectM1(W,H,f){
   return {x:MG_L+aw/2-BOXC[i]*w,y:yb-h,w,h};
 }
 // Teil 2 mobil: Chunk füllt die Breite (linker Rand frei für den Meter), gleiche Unterkante
-function rectM2(W,H){const aw=W-MG_L-MG_R, w=aw/BOXW[69], h=w*9/16; return {x:MG_L-(BOXC[69]-BOXW[69]/2)*w,y:mBottom(H)-h,w,h};}
+// Teil 2: linke/rechte Ecke der aktuellen Oberkante (YAXIS.top) genau in der vertikalen Bildschirmmitte
+function rectM2(W,H){const aw=W-MG_L-MG_R, w=aw/BOXW[69], h=w*9/16; return {x:MG_L-(BOXC[69]-BOXW[69]/2)*w,y:H/2-YA.top*h,w,h};}
 // Bildrechteck in CSS-px. Teil 1: zentriert nach Fit-Modus. Teil 2: kleiner, rechts neben dem Text, unten bündig.
 function rect1(W,H){
   let s=S.fit==='flush'?H/540:Math.min(W/960,H/540); s*=S.scale/100;
   const w=960*s,h=540*s; return {x:(W-w)/2,y:S.fit==='flush'?H-h:(H-h)/2,w,h};
 }
+// Desktop Teil 2 (und Xray): Chunkbreite aus „Part 2 size“ (Anteil der Höhe); wenn Platz, horizontal zentriert, sonst rechts neben Text + Y-Achse
+function geomD(W,H){
+  const BW=BOXW[69]; let cw=BW*H*S.s2/100*16/9; const textR=W*.06+Math.min(380,W*.30), minX=textR+S.s2gap+110; // 110 px: Y-Achse (94 px + 16 px Abstand)
+  const X=Math.max(minX,(W-cw)/2); if(X+cw>W-24)cw=Math.max(200,W-24-X); return {X,cw};
+}
 function rect2(W,H){
-  const h=H*S.s2/100,w=h*16/9, textR=W*.06+Math.min(380,W*.30);
-  return {x:textR+S.s2gap-YMETER.x*w,y:H-h,w,h};
+  const g=geomD(W,H), w=g.cw/BOXW[69], h=w*9/16;
+  return {x:g.X-YA.x*w,y:H/2-YA.top*h,w,h};
+}
+// Linke Chunk-Ecke (x) und Chunkbreite in CSS-px wie in Teil 2 – Xray übernimmt das
+function chunkBox(){const r=isM()?rectM2(SW,SH):rect2(SW,SH);return {X:r.x+YA.x*r.w,cw:BOXW[69]*r.w};}
+// Xray-Bild (1532 px breit, 62,21 px pro Block): Chunk von x 62,15 bis 1469,85 → Anteil links / Breite
+const XL=(766-8*Math.SQRT2*62.21)/1532, XW=16*Math.SQRT2*62.21/1532;
+function layoutXray(){
+  const col=document.getElementById('col'), ax=document.getElementById('axis'), grid=document.querySelector('.xgrid'); if(!col)return;
+  const b=chunkBox(), cw=b.cw/XW, left=b.X-XL*cw;
+  col.style.width=cw+'px';
+  if(isM()){grid.classList.remove('same');grid.style.gridTemplateColumns='';col.style.marginLeft=(left-12)+'px';}
+  else{grid.classList.add('same');grid.style.gridTemplateColumns=`${left}px ${cw}px 1fr`;col.style.marginLeft='0';}
+  ax.style.left=(XL*cw-16-ax.offsetWidth)+'px'; // rechte Kante 16 px links der Chunk-Ecke wie in Teil 2
 }
 function draw(){
   if(!sheets.length)return;
   let f=cur; while(f>1&&!frameOk(f))f--; if(!frameOk(f))return;
-  const im=sheets[Math.floor((f-1)/PER)], sy=((f-1)%PER)*STRIDE;
+  const g=FM(f), im=sheets[Math.floor((g-1)/PER)], sy=((g-1)%PER)*STRIDE, dy=((f-1)%PER)*STRIDE;
   const d=devicePixelRatio||1, W=SW, H=SH, m=isM(); ctx.clearRect(0,0,cv.width,cv.height);
-  const a=m?(cur>=70?rectM2(W,H):rectM1(W,H,cur)):rect1(W,H), k=m?0:ease(shift), b=k>0?rect2(W,H):a;
+  const a=m?rectM1(W,H,Math.min(cur,70)):rect1(W,H), k=ease(shift), b=k>0?(m?rectM2(W,H):rect2(W,H)):a; // mobil wie Desktop: Übergang während des Intro-Texts
   const r={x:a.x+(b.x-a.x)*k,y:a.y+(b.y-a.y)*k,w:a.w+(b.w-a.w)*k,h:a.h+(b.h-a.h)*k};
   const x=r.x*d,y=r.y*d,w=r.w*d,h=r.h*d;
   ctx.imageSmoothingQuality='high'; ctx.drawImage(im,0,sy,FW,FH,x,y,w,h);
+  if(DROPS&&f>=DR[0]&&f<=DR[1]){const di=dsheets[Math.floor((f-1)/PER)];if(di&&di.ok)ctx.drawImage(di,0,dy,FW,FH,x,y,w,h);}
   if(S.fit==='fade'&&S.fade>0&&!m){ // Bildkanten ausblenden (unten nur, wenn die Kante sichtbar ist)
     const fh=h*S.fade/100; ctx.globalCompositeOperation='destination-out';
     let g=ctx.createLinearGradient(0,y,0,y+fh);g.addColorStop(0,'#000');g.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=g;ctx.fillRect(x,y-1,w,fh+1);
     if(y+h<cv.height-2){g=ctx.createLinearGradient(0,y+h-fh,0,y+h);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,'#000');ctx.fillStyle=g;ctx.fillRect(x,y+h-fh,w,fh+1);}
     ctx.globalCompositeOperation='source-over';
   }
+  // Teil 2: Unterkante des Render-Ausschnitts weich ausblenden (der Chunk geht unten aus dem Bild; bis zum Neu-Render mit höherem Ausschnitt)
+  // nur solange die Unterkante des Chunks (vordere Ecke bei Y -64 = y0 + 0,376) unter dem Bildrand liegt – am Ende (Bedrock) ist der Chunk ganz zu sehen
+  const iY=Math.max(0,Math.min(YA.y0.length-1,cur-YA.start)), fb=cur<YA.start?9:YA.y0[iY]+(YA.top-YA.back), fo=k*clamp((fb-.97)/.08);
+  if(fo>0){const fh=h*.22, yb=y+h; ctx.globalCompositeOperation='destination-out';
+    const g=ctx.createLinearGradient(0,yb-fh,0,yb);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,'rgba(0,0,0,'+fo+')');ctx.fillStyle=g;ctx.fillRect(x-1,yb-fh,w+2,fh+1);
+    ctx.globalCompositeOperation='source-over';}
   rect=r; placeMeter(); placeCards();
 }
 // Mobil: Textkarten und Titel direkt unter dem Bild
 function placeCards(){
-  const m=isM(), r2=m?rectM2(SW,SH):null, bt=m?Math.round(SH-(r2.y+.04*r2.h)+12)+'px':'';
+  // mobil: Karte endet über der höchsten Stelle des Chunks (hintere Ecke; zu Beginn von Teil 2 liegt die Oberkante bis zu 5 Lagen höher)
+  const m=isM(), r2=m?rectM2(SW,SH):null, bt=m?Math.round(SH-(r2.y+(YA.back-5*YA.k)*r2.h)+12)+'px':'';
   for(const c in cards){cards[c].style.top=m?'auto':'';cards[c].style.bottom=bt;}
   // Schichtliste am Desktop vertikal zentriert (wie der Text links), auf ganze Pixel gerundet
   layersEl.style.transform=m?'':`translateY(${-Math.round(layersEl.offsetHeight/2)}px)`;
 }
-// Tiefenmeter: fester Platz an der linken Chunk-Ecke, Wert = oberster Block der Ecksäule
+// Y-Achse: rechte Kante 16 px links der linken Chunk-Ecke; Höhe Y liegt im Bild bei y0[f] - (Y+64)*k
 function placeMeter(){
-  const M=YMETER, i=cur-M.start, on=segI>=2&&i>=0&&i<M.d.length&&rect;
-  ym.style.opacity=on?1:0; if(!on)return;
-  const d=devicePixelRatio||1, snap=v=>Math.round(v*d)/d; // auf Gerätepixel runden
-  ym.style.transform=`translate(${snap(rect.x+M.x*rect.w-6)}px,${snap(rect.y+M.y*rect.h)}px)`;
-  ymVal.innerHTML=`<small>Y</small>${M.d[i]}`;
+  const A=YA, i=cur-A.start, on=segI>=2&&segI<SEGS.length-1&&i>=0&&i<A.y0.length&&rect;
+  yax.style.opacity=on?1:0; if(!on)return;
+  const d=devicePixelRatio||1, snap=v=>Math.round(v*d)/d, h=YR*A.k*rect.h;
+  yax.style.height=snap(h)+'px';
+  yax.style.transform=`translate(${snap(rect.x+A.x*rect.w-16-yax.offsetWidth)}px,${snap(rect.y+(A.y0[i]-(YT+64)*A.k)*rect.h)}px)`;
 }
 const ease=t=>t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
 const clamp=v=>Math.max(0,Math.min(1,v));
+const RUN={seg:-1,t0:0,play:false,raf:0}, CA={busy:false,last:0,raf:0};
 function onSeq(){
   const vh=SH/100, top=seq.offsetTop;
   const u=Math.max(0,Math.min(TOTAL,(scrollY-top)/vh));
@@ -483,15 +551,35 @@ function onSeq(){
   for(const [i,s] of SEGS.entries()){
     if(u<=s.b){si=i;const t=(u-s.a)/s.len; f=s.f?Math.round(s.f[0]+(s.f[1]-s.f[0])*t):s.hold; break;}
   }
-  // Text: ist vollständig da, sobald die Animation stoppt; blendet vor dem Stopp ein und danach aus
+  // Stopp mit auto: beim Hereinscrollen von oben laufen die Frames rem → Stopp mit 24 fps ab; von unten bzw. reduzierte Bewegung → gleich das Haltebild
+  const sg=SEGS[si];
+  if(sg.auto){
+    if(RUN.seg!==si){RUN.seg=si;RUN.t0=performance.now();RUN.play=si>segI&&!matchMedia('(prefers-reduced-motion: reduce)').matches;}
+    if(RUN.play){f=Math.min(sg.auto[1],sg.auto[0]+Math.floor((performance.now()-RUN.t0)*24/1000));
+      if(f<sg.auto[1]){if(!RUN.raf){RUN.raf=1;requestAnimationFrame(()=>{RUN.raf=0;onSeq();});}} else RUN.play=false;}
+  } else RUN.seg=-1;
+  if(AUTO&&AP.state!=='done'){ if(u>1){AP.state='done';AP.f=70;AP.tDone=-1e9;} else f=AP.f; } // Autoplay: Scrollen überspringt
+  // Text-Karten. Zeitgesteuert (timed): Stopps mit auto und (Autoplay) der Intro-Text – Einblenden synchron zur Animation, sonst 300 ms ein/aus,
+  // je nachdem ob der Stopp gerade aktiv ist → beim Scrollen bleibt nie halb eingeblendeter Text stehen. Übrige Karten wie bisher per Scrollposition.
+  const now=performance.now(), dt=CA.busy?Math.min(100,now-CA.last):16; CA.last=now; let busy=false;
+  const introDone=AUTO&&AP.state==='done', introK=introDone?clamp((now-AP.tDone)/INTRO_MS):0;
   for(const h of HOLDS){
-    const F=Math.min(25,S.fadeLen), o=clamp(Math.min((u-(h.a-F))/F,((h.b+F)-u)/F));
+    const F=Math.min(25,S.fadeLen), hi=SEGS.indexOf(h), timed=h.auto||(AUTO&&h.card==='intro'); let o;
+    if(timed){let tgt, sync=null;
+      if(h.card==='intro'){tgt=introDone&&si<=hi?1:0; if(tgt&&introK<1)sync=introK;}
+      else{tgt=si===hi?1:0; if(tgt&&RUN.play&&RUN.seg===hi)sync=clamp((now-RUN.t0)/((h.auto[1]-h.auto[0])*1000/24));}
+      if(sync!==null){h.op=sync;busy=true;}
+      else{h.op??=tgt; const st=dt/300; h.op=h.op<tgt?Math.min(tgt,h.op+st):Math.max(tgt,h.op-st); if(h.op!==tgt)busy=true;}
+      o=h.op;
+    } else o=clamp(Math.min((u-(h.a-F))/F,((h.b+F)-u)/F));
     const c=cards[h.card]; c.style.opacity=o; c.style.pointerEvents=o>.5?'auto':'none'; c.style.transform=isM()?`translateY(${Math.round((1-o)*16)}px)`:`translateY(${Math.round(-c.offsetHeight/2+(1-o)*24)}px)`; // ganze Pixel → Pixel-Font bleibt scharf
   }
-  // Bild wandert nach rechts, während der Intro-Text einblendet (Standbild-Frames 59–70)
-  const intro=SEGS[1], F=Math.min(25,S.fadeLen), k=clamp((u-(intro.a-F))/F);
-  hero.style.opacity=isM()?1-k:Math.max(0,1-u/(S.build*.25)); // mobil: Titel bleibt bis zum Intro-Text stehen
-  hint.style.opacity=Math.max(0,1-u/12);
+  CA.busy=busy; if(busy&&!CA.raf)CA.raf=requestAnimationFrame(()=>{CA.raf=0;onSeq();});
+  // Bild wandert nach rechts, während der Intro-Text einblendet (Autoplay: zeitgesteuert nach dem Ende von Teil 1)
+  const intro=SEGS[1], F=Math.min(25,S.fadeLen), k=AUTO?introK:clamp((u-(intro.a-F))/F);
+  hero.style.opacity=AUTO?Math.min(1-k,1-clamp((AP.f-48)/16)) // Autoplay: Titel blendet aus, wenn die Kamera heranfährt
+    :isM()?1-k:Math.max(0,1-u/(S.build*.25)); // mobil: Titel bleibt bis zum Intro-Text stehen
+  hint.style.opacity=AUTO?(introK<1?0:Math.max(0,1-u/12)):Math.max(0,1-u/12);
   layersEl.style.opacity=si>=2&&si<SEGS.length-1?1:0;
   const Lr=f<103?0:f<137?1:f<171?2:f<205?3:4; layerLis.forEach((li,i)=>li.classList.toggle('on',i===Lr));
   if(f!==cur||k!==shift||si!==segI){cur=f;shift=k;segI=si;draw();}
@@ -649,21 +737,33 @@ const invTex=()=>INVT||(INVT=Promise.all(Object.keys(INVTEX).map(k=>new Promise(
 // 1 GUI-Pixel in Gerätepixeln (ganzzahlig → pixelgenau bei jedem Browser-Zoom)
 const invPx=()=>Math.max(1,Math.round((isM()?2:S.invScale)*(devicePixelRatio||1)));
 // Block als Inventar-Icon: isometrischer Würfel wie im Spiel (GUI-Drehung 30°/225°, Größe 0,625),
-// Flächenhelligkeit laut Minecraft Wiki: oben 100 %, links #CECECE (81 %), rechts #9E9E9E (62 %)
+// Flächenhelligkeit wie im Spiel-Screenshot gemessen (25.11.): oben 100 %, links 67 %, rechts 45 % (Wiki-Werte 81/62 % wirkten zu flach)
 function drawCube(ctx,px,top,left,right,size=16){
   const e=size*.625*px, w=e*Math.SQRT2, h=w/2, H=e*Math.cos(Math.PI/6), cx=size/2*px, y0=(size*px-(h+H))/2, Lx=cx-w/2, Ly=y0+h/2, Bx=cx, By=y0+h;
   ctx.imageSmoothingEnabled=false;
   const face=(img,a,b,c,d,x,y,shade)=>{ctx.save();ctx.setTransform(a/16,b/16,c/16,d/16,x,y);ctx.drawImage(img,-.06,-.06,16.12,16.12); // minimal größer: keine Lücken an den Kanten
     if(shade){ctx.fillStyle=`rgba(0,0,0,${shade})`;ctx.fillRect(-.06,-.06,16.12,16.12);}ctx.restore();};
   face(top,w/2,-h/2,w/2,h/2,Lx,Ly,0);
-  face(left,w/2,h/2,0,H,Lx,Ly,1-206/255);
-  face(right,w/2,-h/2,0,H,Bx,By,1-158/255);
+  face(left,w/2,h/2,0,H,Lx,Ly,1-.67);
+  face(right,w/2,-h/2,0,H,Bx,By,1-.45);
 }
-// Truhe (Platzhalter, bis der Blender-Render da ist): gleicher Würfel mit den Truhentexturen
-async function drawChest(){
-  const T=await invTex(), d=devicePixelRatio||1, css=isM()?120:168, px=Math.round(css/16*d), cv=document.getElementById('chestCv');
-  cv.width=cv.height=16*px; cv.style.width=cv.style.height=(16*px/d)+'px';
-  drawCube(cv.getContext('2d'),px,T.MWO_chest_top,T.MWO_chest_front,T.MWO_chest_side);
+// Truhe: Blender-Render (Szene „ChestRender“), Sprite-Sheet mit 11 Frames Öffnen, 24 fps wie die Sequenz; Schließen = rückwärts
+const CH={w:599,h:840,gap:20,n:11,img:new Image()}; let chestF=0, chestRAF=0;
+CH.img.onload=()=>drawChest(); CH.img.src='chest/chest_open.webp';
+const chestCv=document.getElementById('chestCv'), chestBtn=document.getElementById('chestBtn');
+function drawChest(){
+  const d=devicePixelRatio||1, css=isM()?150:210, c=chestCv.getContext('2d');
+  chestCv.style.width=css+'px'; chestCv.style.height=Math.round(css*CH.h/CH.w)+'px';
+  const W=Math.round(css*d), H=Math.round(css*CH.h/CH.w*d); if(chestCv.width!==W||chestCv.height!==H){chestCv.width=W;chestCv.height=H;}
+  c.clearRect(0,0,W,H); if(!CH.img.complete||!CH.img.naturalWidth)return;
+  c.imageSmoothingQuality='high'; c.drawImage(CH.img,chestF*(CH.w+CH.gap),0,CH.w,CH.h,0,0,W,H);
+}
+function playChest(to,done){ // Frame für Frame bis „to“ (0 = zu, 10 = offen)
+  cancelAnimationFrame(chestRAF); const from=chestF, dir=Math.sign(to-from);
+  if(!dir||matchMedia('(prefers-reduced-motion: reduce)').matches){chestF=to;drawChest();done&&done();return;}
+  let t0=null; const step=ts=>{t0??=ts; const f=from+dir*Math.min(Math.abs(to-from),Math.floor((ts-t0)/(1000/24)));
+    if(f!==chestF){chestF=f;drawChest();} if(f===to){done&&done();return;} chestRAF=requestAnimationFrame(step);};
+  chestRAF=requestAnimationFrame(step);
 }
 // Die ganze Truhe (Rahmen, Slots, Icons, Zahlen, Hervorhebung) ist EIN Canvas in Gerätepixeln → nichts kann beim Zoomen aus dem Raster rutschen
 let PX=0, ICON={}, hovF=-1, pinF=-1;
@@ -672,7 +772,7 @@ async function buildInv(){
   if(PX!==px){ PX=px; const T=await invTex(); await document.fonts.load('18px Monocraft');
     ICON={}; FAM.forEach(f=>f.items.forEach(({id,tp,sd})=>{const c=document.createElement('canvas');c.width=c.height=16*px;drawCube(c.getContext('2d'),px,T[tp||id],T[sd||id],T[sd||id]);ICON[id]=c;})); }
   const W=176, H=17+ROWS*18+7; cvP.width=W*px; cvP.height=H*px;
-  mcgui.style.width=(W*px/d)+'px'; mcgui.style.height=(H*px/d)+'px'; mcgui.style.setProperty('--u',px/d+'px');
+  mcgui.style.width=(W*px/d)+'px'; mcgui.style.height=(H*px/d)+'px'; mcgui.style.setProperty('--u',px/d+'px'); document.documentElement.style.setProperty('--mcu',px/d+'px'); // Tooltip im gleichen GUI-Maßstab
   drawInv();
 }
 function drawInv(){
@@ -687,15 +787,18 @@ function drawInv(){
   r(K,2,0,W-5,1); r(K,1,1); r(K,0,2,1,H-5); r(K,W-3,1); r(K,W-2,2); r(K,W-1,3,1,H-5);
   r(K,1,H-3); r(K,2,H-2); r(K,3,H-1,W-5,1); r(K,W-2,H-2);
   c.clearRect((W-2)*px,px,px,px); c.clearRect(px,(H-2)*px,px,px); // Eckpixel außerhalb des Umrisses (oben rechts, unten links) frei
-  const fp=Math.max(1,Math.round(px*.75)); // Pixelgröße der Stackzahl
-  c.font=`${9*fp}px Monocraft`; c.textAlign='right'; c.textBaseline='alphabetic';
-  for(let i=0;i<ROWS*9;i++){const x=7+(i%9)*18, y=17+Math.floor(i/9)*18, s=SLOTS[i];
+  // Stackzahl wie im Spiel: 1 Font-Pixel = 1 GUI-Pixel, Glyphen 7 px hoch; Tinte endet rechts bei Slot-x+17, unten bei Slot-y+17, Schatten 1 px nach rechts unten
+  // Monocraft: 9 Font-Pixel pro em, 1 Pixel Laufweite rechts → textAlign right bei x+18
+  c.font=`${9*px}px Monocraft`; c.textAlign='right'; c.textBaseline='alphabetic';
+  // erst alle Slots (wie die Hintergrundtextur im Spiel), dann Items und Zahlen – deren Schatten ragt 1 px in den Nachbar-Slot
+  for(let i=0;i<ROWS*9;i++){const x=7+(i%9)*18, y=17+Math.floor(i/9)*18;
     // Slot: dunkel oben/links, hell unten/rechts, Eckpixel grau
-    r('#8b8b8b',x,y,18,18); r('#373737',x,y,17,1); r('#373737',x,y,1,17); r(L,x+1,y+17,17,1); r(L,x+17,y+1,1,17);
+    r('#8b8b8b',x,y,18,18); r('#373737',x,y,17,1); r('#373737',x,y,1,17); r(L,x+1,y+17,17,1); r(L,x+17,y+1,1,17);}
+  for(let i=0;i<ROWS*9;i++){const x=7+(i%9)*18, y=17+Math.floor(i/9)*18, s=SLOTS[i];
     if(!s)continue;
+    if(s.f===hovF||s.f===pinF){c.fillStyle='rgba(255,255,255,.5)';c.fillRect((x+1)*px,(y+1)*px,16*px,16*px);} // Hervorhebung nur hinter dem Item (wie im Spiel)
     c.drawImage(ICON[s.it.id],(x+1)*px,(y+1)*px);
-    if(s.f===hovF||s.f===pinF){c.fillStyle='rgba(255,255,255,.5)';c.fillRect((x+1)*px,(y+1)*px,16*px,16*px);}
-    if(s.k>1){const tx=(x+17)*px-fp, ty=(y+17)*px-fp; c.fillStyle='#3f3f3f';c.fillText(s.k,tx+fp,ty+fp); c.fillStyle='#fff';c.fillText(s.k,tx,ty);}
+    if(s.k>1){const tx=(x+18)*px, ty=(y+17)*px; c.fillStyle='#3f3f3f';c.fillText(s.k,tx+px,ty+px); c.fillStyle='#fff';c.fillText(s.k,tx,ty);}
   }
 }
 // Position → Slot
@@ -723,17 +826,25 @@ document.addEventListener('click',e=>{if(pinF>=0&&e.target!==cvP)pin(-1);});
 addEventListener('scroll',()=>{if(mctip.style.opacity==='1')hideTip();},{passive:true});
 // Für Screenreader: Inhalt als Liste
 document.getElementById('invList').innerHTML=FAM.map(f=>`<li>${f.name}: ${fmtN(f.total)} blocks (${pctS(f.total)})</li>`).join('');
-// Öffnen / Schließen
+// Öffnen / Schließen: Truhe geht auf → Inventar blendet ein; beim Schließen erst Inventar weg, dann Deckel zu
+let chestOpen=false;
 async function openChest(){
-  await buildInv(); chestSec.classList.add('open');
-  requestAnimationFrame(()=>{chestSec.classList.add('shown'); scrollTo({top:document.getElementById('invWrap').getBoundingClientRect().top+scrollY-innerHeight*.08,behavior:'smooth'});});
+  if(chestOpen)return; chestOpen=true; chestBtn.setAttribute('aria-expanded','true'); chestBtn.setAttribute('aria-label','Close the chest');
+  const built=buildInv();
+  playChest(CH.n-1,async()=>{ await built; if(!chestOpen)return; chestSec.classList.add('open');
+    requestAnimationFrame(()=>{chestSec.classList.add('shown'); scrollTo({top:document.getElementById('invWrap').getBoundingClientRect().top+scrollY-innerHeight*.08,behavior:'smooth'});});});
 }
-function closeChest(){chestSec.classList.remove('shown','open');hideTip();pin(-1);}
-document.getElementById('chestBtn').addEventListener('click',openChest);
-addEventListener('keydown',e=>{if(!chestSec.classList.contains('open')||/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)||e.target.isContentEditable)return;
+function closeChest(){
+  if(!chestOpen)return; chestOpen=false; chestBtn.setAttribute('aria-expanded','false'); chestBtn.setAttribute('aria-label','Open the chest');
+  hideTip(); pin(-1); chestSec.classList.remove('shown');
+  setTimeout(()=>{if(chestOpen)return; chestSec.classList.remove('open'); playChest(0);},350); // Inventar ausblenden, dann Deckel zu
+}
+chestBtn.addEventListener('click',()=>chestOpen?closeChest():openChest());
+document.getElementById('invFoot').addEventListener('click',closeChest);
+addEventListener('keydown',e=>{if(!chestOpen||/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)||e.target.isContentEditable)return;
   if(e.key==='Escape'||e.key==='e'||e.key==='E')closeChest();});
 // bei Tweaks / Größenänderung / Browser-Zoom neu zeichnen
-function invApply(){drawChest(); if(chestSec.classList.contains('open'))buildInv();}
+function invApply(){drawChest(); if(chestOpen)buildInv();}
 addEventListener('resize',invApply);
 matchMedia(`(resolution: ${devicePixelRatio}dppx)`).addEventListener('change',invApply);
 
